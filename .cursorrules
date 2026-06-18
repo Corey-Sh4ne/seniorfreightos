@@ -1,0 +1,11 @@
+You are helping build SeniorFreightOS, an FF&E logistics platform for Olson Resource Group.
+
+Rules:
+- NEVER hardcode API keys, secrets, or credentials. Always use process.env variables.
+- Always add new environment variables to .env.example with a blank value.
+- Keep each file under 200 lines. If a file is getting long, suggest splitting it.
+- The pricing engine lives in src/utils/pricingEngine.js and must be a pure function.
+- Enforce role-based access at the API layer, never UI-only.
+- Client portal routes must always filter by clientName before returning data.
+- Never use TypeScript — this project uses plain JavaScript.
+- Always use Tailwind CSS for styling.
