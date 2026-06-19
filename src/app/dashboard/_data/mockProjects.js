@@ -1,0 +1,16 @@
+export const MOCK_PROJECTS = [
+  { id: '1',  code: 'SFO-2026-001', client: 'Sunrise Senior Living', facility: 'Mill Creek Campus',  status: 'In Transit', weight: 12400, shipsReceived: 3, shipsTotal: 5, miles: 847,  rush: false, created: 'Jun 3, 2026'  },
+  { id: '2',  code: 'SFO-2026-002', client: 'Heritage Senior Homes', facility: 'Lakewood Gardens',   status: 'Delayed',    weight: 8750,  shipsReceived: 1, shipsTotal: 4, miles: 312,  rush: true,  created: 'Jun 8, 2026'  },
+  { id: '3',  code: 'SFO-2026-003', client: 'BrightPath Living',     facility: 'Riverside Manor',    status: 'Quote',      weight: 0,     shipsReceived: 0, shipsTotal: 0, miles: 0,    rush: false, created: 'Jun 10, 2026' },
+  { id: '4',  code: 'SFO-2026-004', client: 'Sunrise Senior Living', facility: 'Pine Ridge East',    status: 'Staged',     weight: 19200, shipsReceived: 0, shipsTotal: 6, miles: 1204, rush: true,  created: 'May 28, 2026' },
+  { id: '5',  code: 'SFO-2026-005', client: 'Comfort Care REIT',     facility: 'Oak Valley Suites',  status: 'Installed',  weight: 23100, shipsReceived: 8, shipsTotal: 8, miles: 562,  rush: false, created: 'May 15, 2026' },
+  { id: '6',  code: 'SFO-2026-006', client: 'Heritage Senior Homes', facility: 'Clearwater Bay',     status: 'Delayed',    weight: 5600,  shipsReceived: 2, shipsTotal: 3, miles: 425,  rush: true,  created: 'Jun 12, 2026' },
+  { id: '7',  code: 'SFO-2026-007', client: 'AmeriCare Living',      facility: 'Summit View Point',  status: 'PO Issued',  weight: 14800, shipsReceived: 0, shipsTotal: 5, miles: 731,  rush: false, created: 'Jun 14, 2026' },
+  { id: '8',  code: 'SFO-2026-008', client: 'BrightPath Living',     facility: 'North Shore Place',  status: 'Loaded',     weight: 9300,  shipsReceived: 0, shipsTotal: 3, miles: 289,  rush: false, created: 'Jun 16, 2026' },
+  { id: '9',  code: 'SFO-2026-009', client: 'Comfort Care REIT',     facility: 'Elmwood Terrace',    status: 'Delayed',    weight: 16200, shipsReceived: 1, shipsTotal: 7, miles: 985,  rush: true,  created: 'Jun 1, 2026'  },
+  { id: '10', code: 'SFO-2026-010', client: 'AmeriCare Living',      facility: 'Westfield Commons',  status: 'Delivered',  weight: 28400, shipsReceived: 9, shipsTotal: 9, miles: 1543, rush: false, created: 'May 22, 2026' },
+  { id: '11', code: 'SFO-2026-011', client: 'Sunrise Senior Living', facility: 'Canyon Ridge',       status: 'Quote',      weight: 0,     shipsReceived: 0, shipsTotal: 0, miles: 0,    rush: false, created: 'Jun 17, 2026' },
+  { id: '12', code: 'SFO-2026-012', client: 'Heritage Senior Homes', facility: 'Maplewood Village',  status: 'QC',         weight: 11700, shipsReceived: 4, shipsTotal: 4, miles: 608,  rush: false, created: 'Jun 6, 2026'  },
+  { id: '13', code: 'SFO-2026-013', client: 'BrightPath Living',     facility: 'Harbor Point East',  status: 'Received',   weight: 7400,  shipsReceived: 2, shipsTotal: 4, miles: 473,  rush: true,  created: 'Jun 5, 2026'  },
+  { id: '14', code: 'SFO-2026-014', client: 'AmeriCare Living',      facility: 'Prairie Vista Court', status: 'In Transit', weight: 18600, shipsReceived: 5, shipsTotal: 7, miles: 892,  rush: false, created: 'May 31, 2026' },
+];
