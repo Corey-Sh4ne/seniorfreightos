@@ -1,0 +1,18 @@
+{
+  "receivingPerLb": 0.085,
+  "storagePerLbPerDay": 0.012,
+  "freightPerLb": 0.165,
+  "freightMinimum": 450,
+  "fuelSurchargePct": 0.09,
+  "rushSurchargePct": 0.18,
+  "overheadPct": 0.12,
+  "marginPct": 0.18,
+  "installTaskRates": {
+    "assemble_furniture": 35,
+    "hang_artwork": 18,
+    "mount_tv_fixture": 45,
+    "place_and_position": 8,
+    "debris_removal": 6,
+    "install_window_treatments": 22
+  }
+}
