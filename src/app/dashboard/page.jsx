@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getProjects }    from './_data/getProjects';
 import DashboardClient    from './_components/DashboardClient';
 
