@@ -1,17 +1,10 @@
 import { query } from '@/db/index';
 
-/**
- * Fetch all projects belonging to a verified client.
- * clientName is stamped from the Clerk session — never trust a URL param alone.
- * Pricing, rate, margin, and internal-notes columns are never selected.
- */
-export async function getPortalProjects(clientName) {
+export async function getPortalProjects() {
   const { rows } = await query(
     `SELECT id, code, facility_name, facility_address, status, created_at
        FROM projects
-      WHERE client_name = $1
       ORDER BY created_at DESC`,
-    [clientName],
   );
   return rows.map((r) => ({
     id:              r.id,
