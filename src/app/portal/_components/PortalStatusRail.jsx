@@ -10,6 +10,8 @@ export default function PortalStatusRail({ currentStatus }) {
   const currentIndex = PIPELINE_STATUSES.indexOf(currentStatus);
   if (currentIndex < 0) return null;
 
+  const isComplete = currentIndex === PIPELINE_STATUSES.length - 1;
+
   return (
     <div className="space-y-2">
       {/* Segmented bar */}
@@ -20,7 +22,7 @@ export default function PortalStatusRail({ currentStatus }) {
 
           let colorClass = 'bg-zinc-200';
           if (isCompleted) colorClass = 'bg-emerald-400';
-          if (isActive)    colorClass = 'bg-blue-500';
+          if (isActive)    colorClass = isComplete ? 'bg-emerald-500' : 'bg-blue-500';
 
           return (
             <div
@@ -33,7 +35,7 @@ export default function PortalStatusRail({ currentStatus }) {
       </div>
 
       {/* Active stage label */}
-      <p className="text-[11px] font-medium text-blue-600 leading-none">
+      <p className={`text-[11px] font-medium leading-none ${isComplete ? 'text-emerald-600' : 'text-blue-600'}`}>
         {currentStatus}
       </p>
     </div>
