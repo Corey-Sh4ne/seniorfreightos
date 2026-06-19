@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
-import jwt from 'jsonwebtoken';
+import { notFound, redirect } from 'next/navigation';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { calculateProjectPricing } from '@/utils/pricingEngine';
 import { getProjectById, getShipmentsByProjectId, getInstallTasksByProjectId } from './_data/getProject';
 import ProjectDetailClient from './_components/ProjectDetailClient';
@@ -18,26 +17,17 @@ const TASK_TYPE_MAP = {
   window_treat: 'install_window_treatments',
 };
 
-/**
- * Decode the `token` cookie to extract the user role.
- * Returns null when no valid token is present.
- */
-async function getUserRole() {
-  try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
-    if (!token || !process.env.JWT_SECRET) return null;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return decoded?.role ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export default async function ProjectDetailPage({ params }) {
   const { id } = await params;
 
-  const role = await getUserRole();
+  // Read the role fresh from the Clerk API rather than the cached session token,
+  // which can be stale and made the Pricing Quote tab hidden for admins.
+  const { userId } = await auth();
+  if (!userId) redirect('/sign-in');
+
+  const client = await clerkClient();
+  const user = await client.users.getUser(userId);
+  const role = user.publicMetadata?.role ?? null;
   const isAdmin = role === 'admin';
 
   const [project, shipments, installTasks] = await Promise.all([
@@ -72,7 +62,7 @@ export default async function ProjectDetailPage({ params }) {
       shipments={shipments}
       installTasks={installTasks}
       pricing={pricing}
-      isAdmin={isAdmin}
+      role={role}
     />
   );
 }

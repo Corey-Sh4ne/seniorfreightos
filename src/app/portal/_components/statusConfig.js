@@ -12,6 +12,7 @@ export const DB_TO_PIPELINE = {
   receiving:  'Receiving',
   staging:    'Consolidating',
   scheduled:  'Out for Delivery',
+  delivered:  'Delivered',
   installing: 'Installing',
   complete:   'Complete',
   invoiced:   'Complete',

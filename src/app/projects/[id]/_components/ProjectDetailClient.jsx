@@ -29,10 +29,11 @@ function StatCard({ label, value, danger }) {
 const ALL_TABS = ['Shipments', 'Install Tasks', 'Pricing Quote', 'Notes'];
 
 export default function ProjectDetailClient({
-  project, shipments, installTasks, pricing, isAdmin,
+  project, shipments, installTasks, pricing, role,
 }) {
   const [activeTab, setActiveTab] = useState('Shipments');
   const [pending, startTransition] = useTransition();
+  const isAdmin = role === 'admin';
 
   // VALID_TRANSITIONS is keyed by pipeline labels, not raw DB values, so we must
   // normalize project.status before the lookup or the button stays disabled.
