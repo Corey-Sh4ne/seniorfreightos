@@ -7,7 +7,7 @@
  */
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import ProjectHero from './_components/ProjectHero';
@@ -24,8 +24,23 @@ export default async function PortalProjectPage({ params }) {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
 
-  const project = await getPortalProjectById(id);
-  if (!project) notFound();
+  // Read role and clientName fresh from the Clerk API. Session claims are cached
+  // and can be stale, which previously broke client scoping.
+  const client = await clerkClient();
+  const user = await client.users.getUser(userId);
+  const role = user.publicMetadata?.role ?? null;
+  const clientName = user.publicMetadata?.clientName ?? null;
+  const isAdmin = role === 'admin';
+
+  // Admins can view any project; client users are scoped to their own
+  // organization, so the lookup is filtered by client_name.
+  const project = await getPortalProjectById(id, isAdmin ? null : clientName);
+  if (!project) {
+    // A client user requesting a project that isn't theirs gets sent back to
+    // their portal rather than leaking the project's existence via a 404.
+    if (!isAdmin) redirect('/portal');
+    notFound();
+  }
 
   const [shipments, installTasks] = await Promise.all([
     getPortalProjectShipments(project.id),

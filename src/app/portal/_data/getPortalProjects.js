@@ -1,11 +1,25 @@
 import { query } from '@/db/index';
 
-export async function getPortalProjects() {
-  const { rows } = await query(
-    `SELECT id, code, facility_name, facility_address, status, created_at
-       FROM projects
-      ORDER BY created_at DESC`,
-  );
+/**
+ * Fetch portal projects.
+ *
+ * Pass a clientName to scope results to a single client (client_user view).
+ * Omit it (or pass a falsy value) to return every project (admin view).
+ */
+export async function getPortalProjects(clientName) {
+  const { rows } = clientName
+    ? await query(
+        `SELECT id, code, facility_name, facility_address, status, created_at
+           FROM projects
+          WHERE client_name = $1
+          ORDER BY created_at DESC`,
+        [clientName],
+      )
+    : await query(
+        `SELECT id, code, facility_name, facility_address, status, created_at
+           FROM projects
+          ORDER BY created_at DESC`,
+      );
   return rows.map((r) => ({
     id:              r.id,
     code:            r.code,

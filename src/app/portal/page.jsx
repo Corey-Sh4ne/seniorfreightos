@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { getPortalProjects, getPortalShipmentsForProject } from './_data/getPortalProjects';
 import PortalHeader from './_components/PortalHeader';
@@ -11,7 +11,15 @@ export default async function PortalPage() {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
 
-  const projects = await getPortalProjects();
+  // Read role and clientName fresh from the Clerk API. Session claims are cached
+  // and can be stale, which previously broke client scoping.
+  const client = await clerkClient();
+  const user = await client.users.getUser(userId);
+  const role = user.publicMetadata?.role ?? null;
+  const clientName = user.publicMetadata?.clientName ?? null;
+
+  // Admins see every project; client users are scoped to their own organization.
+  const projects = await getPortalProjects(role === 'admin' ? null : clientName);
 
   const shipmentArrays = await Promise.all(
     projects.map((p) => getPortalShipmentsForProject(p.id)),

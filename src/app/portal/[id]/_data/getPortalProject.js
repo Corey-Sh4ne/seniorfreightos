@@ -3,16 +3,29 @@ import { query } from '@/db/index';
 /**
  * Fetch a single project by ID.
  * Pricing, rate, margin, and notes columns are never selected.
+ *
+ * Pass a clientName to scope the lookup to a single client (client_user view);
+ * a project owned by another client will not be returned. Omit it for the admin
+ * view, which can read any project by id.
  */
-export async function getPortalProjectById(id) {
-  const { rows } = await query(
-    `SELECT id, code, facility_name, facility_address,
-            contact_name, contact_email, status,
-            storage_days, rush_delivery, created_at
-       FROM projects
-      WHERE id = $1`,
-    [id],
-  );
+export async function getPortalProjectById(id, clientName) {
+  const { rows } = clientName
+    ? await query(
+        `SELECT id, code, facility_name, facility_address,
+                contact_name, contact_email, status,
+                storage_days, rush_delivery, created_at
+           FROM projects
+          WHERE id = $1 AND client_name = $2`,
+        [id, clientName],
+      )
+    : await query(
+        `SELECT id, code, facility_name, facility_address,
+                contact_name, contact_email, status,
+                storage_days, rush_delivery, created_at
+           FROM projects
+          WHERE id = $1`,
+        [id],
+      );
   if (!rows.length) return null;
   const r = rows[0];
   return {
