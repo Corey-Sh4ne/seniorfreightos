@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { UserButton } from '@clerk/nextjs';
 
 const NAV_PRIMARY = [
   { label: 'Dashboard', href: '/dashboard' },
@@ -64,7 +65,10 @@ export default function Sidebar() {
             active={pathname === item.href}
           />
         ))}
-        <div className="px-3 pt-3 text-xs text-slate-600">v0.1.0 · Internal</div>
+        <div className="px-3 pt-3 flex items-center gap-2">
+          <UserButton afterSignOutUrl="/sign-in" />
+          <span className="text-xs text-slate-500">v0.1.0 · Internal</span>
+        </div>
       </div>
     </aside>
   );
