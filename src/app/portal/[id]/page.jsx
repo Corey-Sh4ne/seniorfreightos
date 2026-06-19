@@ -3,12 +3,12 @@
  *
  * Security contract:
  *   - Project is fetched with a WHERE client_name = $clientName clause.
- *   - clientName comes only from the Clerk session, never from the URL.
+ *   - clientName comes only from Clerk's API, never from the URL.
  *   - No pricing, rate, margin, or internal-notes data is fetched or rendered.
  */
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import StatusRail from '@/components/StatusRail';
@@ -22,10 +22,11 @@ import {
 export default async function PortalProjectPage({ params }) {
   const { id } = await params;
 
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   if (!userId) redirect('/sign-in');
 
-  const clientName = sessionClaims?.publicMetadata?.clientName;
+  const user = await clerkClient.users.getUser(userId);
+  const clientName = user.publicMetadata?.clientName;
   if (!clientName) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-50 px-4">

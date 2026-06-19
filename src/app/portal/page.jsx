@@ -2,23 +2,24 @@
  * Client Portal — project list dashboard.
  *
  * Security contract:
- *   - clientName is read exclusively from the Clerk session (sessionClaims.publicMetadata.clientName).
+ *   - clientName is read exclusively from Clerk's API (user.publicMetadata.clientName).
  *   - All DB queries filter by clientName server-side — never trusting URL params.
  *   - No pricing, rate, margin, or internal-notes data is ever fetched or rendered.
  */
 export const dynamic = 'force-dynamic';
 
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import StatusRail from '@/components/StatusRail';
 import { getPortalProjects, getPortalShipmentsForProject } from './_data/getPortalProjects';
 
 export default async function PortalPage() {
-  const { userId, sessionClaims } = await auth();
+  const { userId } = await auth();
   if (!userId) redirect('/sign-in');
 
-  const clientName = sessionClaims?.publicMetadata?.clientName;
+  const user = await clerkClient.users.getUser(userId);
+  const clientName = user.publicMetadata?.clientName;
   if (!clientName) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-50 px-4">
