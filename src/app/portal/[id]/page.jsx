@@ -25,7 +25,7 @@ export default async function PortalProjectPage({ params }) {
   const { userId, sessionClaims } = await auth();
   if (!userId) redirect('/sign-in');
 
-  const clientName = sessionClaims?.metadata?.clientName;
+  const clientName = sessionClaims?.publicMetadata?.clientName;
   if (!clientName) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-50 px-4">

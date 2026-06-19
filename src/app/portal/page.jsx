@@ -2,7 +2,7 @@
  * Client Portal — project list dashboard.
  *
  * Security contract:
- *   - clientName is read exclusively from the Clerk session (sessionClaims.metadata.clientName).
+ *   - clientName is read exclusively from the Clerk session (sessionClaims.publicMetadata.clientName).
  *   - All DB queries filter by clientName server-side — never trusting URL params.
  *   - No pricing, rate, margin, or internal-notes data is ever fetched or rendered.
  */
@@ -18,7 +18,7 @@ export default async function PortalPage() {
   const { userId, sessionClaims } = await auth();
   if (!userId) redirect('/sign-in');
 
-  const clientName = sessionClaims?.metadata?.clientName;
+  const clientName = sessionClaims?.publicMetadata?.clientName;
   if (!clientName) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-zinc-50 px-4">
