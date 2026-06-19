@@ -13,6 +13,18 @@ function statusStyle(status) {
   return                 'bg-violet-50 text-violet-700 border-violet-100';
 }
 
+/**
+ * Returns a Tailwind border-left color class.
+ * blue = active (Approved–Installing), green = Complete, gray = prospect/unknown.
+ */
+function getBorderAccent(status) {
+  const idx = PIPELINE_STATUSES.indexOf(status);
+  if (idx < 0)                              return 'border-l-zinc-300';
+  if (idx === PIPELINE_STATUSES.length - 1) return 'border-l-emerald-400';
+  if (idx >= 2)                             return 'border-l-blue-400';
+  return 'border-l-zinc-300';
+}
+
 export default function ProjectCard({ project, shipments }) {
   const totalCartons  = shipments.reduce((sum, s) => sum + s.cartons, 0);
   const receivedCount = shipments.filter((s) => s.received).length;
@@ -25,19 +37,25 @@ export default function ProjectCard({ project, shipments }) {
 
   return (
     <Link href={`/portal/${project.id}`} className="block group">
-      <article className="bg-white rounded-xl border border-zinc-200 p-5 sm:p-6 shadow-sm space-y-5 transition-all duration-150 group-hover:border-blue-300 group-hover:shadow-md group-hover:-translate-y-px">
-
-        {/* Header row: identity + status pill */}
+      <article
+        className={`
+          bg-white rounded-xl border border-zinc-200 border-l-4
+          ${getBorderAccent(project.status)}
+          p-6 sm:p-8 shadow-sm space-y-5
+          transition-all duration-150 group-hover:shadow-lg group-hover:-translate-y-0.5
+        `}
+      >
+        {/* Header: project code label, facility name, status pill */}
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-mono font-medium text-zinc-400 tracking-wider mb-0.5">
+            <p className="text-[11px] font-mono font-medium text-zinc-400 tracking-widest uppercase mb-1">
               {project.code}
             </p>
-            <h2 className="text-lg font-semibold text-zinc-900 truncate leading-snug">
+            <h2 className="text-xl font-bold text-zinc-900 leading-snug truncate">
               {project.facilityName}
             </h2>
             {project.facilityAddress && (
-              <p className="text-sm text-zinc-500 mt-0.5 truncate">
+              <p className="text-sm text-zinc-500 mt-1 truncate">
                 {project.facilityAddress}
               </p>
             )}
@@ -48,6 +66,15 @@ export default function ProjectCard({ project, shipments }) {
           >
             {project.status}
           </span>
+        </div>
+
+        {/* Status rail + stage count */}
+        <div className="space-y-2">
+          <PortalStatusRail currentStatus={project.status} />
+          <p className="text-sm text-zinc-400">
+            <span className="font-semibold text-zinc-700">{stagesComplete}</span>
+            {' '}of {totalStages} stages complete
+          </p>
         </div>
 
         {/* Stats row — only shown when shipments exist */}
@@ -61,17 +88,11 @@ export default function ProjectCard({ project, shipments }) {
           </div>
         )}
 
-        {/* Progress + segmented rail */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-zinc-400">
-              <span className="font-semibold text-zinc-600">{stagesComplete}</span> of {totalStages} stages complete
-            </p>
-            <span className="text-xs text-zinc-400 group-hover:text-blue-500 transition-colors">
-              View details →
-            </span>
-          </div>
-          <PortalStatusRail currentStatus={project.status} />
+        {/* Footer: view details */}
+        <div className="flex justify-end pt-1">
+          <span className="text-xs font-medium text-zinc-400 group-hover:text-blue-500 transition-colors">
+            View details →
+          </span>
         </div>
       </article>
     </Link>
