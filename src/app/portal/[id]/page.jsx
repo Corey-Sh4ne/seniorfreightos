@@ -2,13 +2,12 @@
  * Client Portal — single project status view.
  *
  * Security contract:
- *   - Project is fetched with a WHERE client_name = $clientName clause.
- *   - clientName comes only from Clerk's API, never from the URL.
+ *   - User must be authenticated via Clerk.
  *   - No pricing, rate, margin, or internal-notes data is fetched or rendered.
  */
 export const dynamic = 'force-dynamic';
 
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import StatusRail from '@/components/StatusRail';
@@ -25,19 +24,7 @@ export default async function PortalProjectPage({ params }) {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
 
-  const user = await clerkClient.users.getUser(userId);
-  const clientName = user.publicMetadata?.clientName;
-  if (!clientName) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-50 px-4">
-        <p className="text-zinc-500 text-sm text-center max-w-sm">
-          Your account is not linked to a client organization. Contact your administrator.
-        </p>
-      </div>
-    );
-  }
-
-  const project = await getPortalProjectById(id, clientName);
+  const project = await getPortalProjectById(id);
   if (!project) notFound();
 
   const [shipments, installTasks] = await Promise.all([

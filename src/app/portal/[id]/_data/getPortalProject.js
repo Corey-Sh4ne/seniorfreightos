@@ -1,20 +1,17 @@
 import { query } from '@/db/index';
 
 /**
- * Fetch a single project, gated by clientName.
- * Returns null when the project does not exist or belongs to a different client —
- * both cases are intentionally indistinguishable to the caller.
- *
+ * Fetch a single project by ID.
  * Pricing, rate, margin, and notes columns are never selected.
  */
-export async function getPortalProjectById(id, clientName) {
+export async function getPortalProjectById(id) {
   const { rows } = await query(
     `SELECT id, code, facility_name, facility_address,
             contact_name, contact_email, status,
             storage_days, rush_delivery, created_at
        FROM projects
-      WHERE id = $1 AND client_name = $2`,
-    [id, clientName],
+      WHERE id = $1`,
+    [id],
   );
   if (!rows.length) return null;
   const r = rows[0];
