@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 
 import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
 import Sidebar from '@/app/dashboard/_components/Sidebar';
 import RateCardForm from './_components/RateCardForm';
 import { loadRateCard } from './_actions/saveRateCard';
@@ -12,11 +11,7 @@ export const metadata = {
 };
 
 export default async function RateCardPage() {
-  const { sessionClaims } = await auth();
-
-  if (sessionClaims?.metadata?.role !== 'admin') {
-    redirect('/dashboard');
-  }
+  await auth();
 
   const rates = await loadRateCard();
 
