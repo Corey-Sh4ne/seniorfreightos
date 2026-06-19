@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
+import Link          from 'next/link';
 import Sidebar       from './Sidebar';
 import StatCards     from './StatCards';
 import FilterBar     from './FilterBar';
@@ -53,10 +54,13 @@ export default function DashboardClient({ projects }) {
             <h1 className="text-lg font-semibold text-zinc-900 leading-tight">Dashboard</h1>
             <p className="text-xs text-zinc-400 mt-0.5">FF&amp;E logistics overview</p>
           </div>
-          <button className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm">
+          <Link
+            href="/projects/new"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm"
+          >
             <span className="text-base leading-none">+</span>
             <span>New Project</span>
-          </button>
+          </Link>
         </header>
 
         <main className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
