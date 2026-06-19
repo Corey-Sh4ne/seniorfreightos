@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Sidebar from '@/app/dashboard/_components/Sidebar';
 import StatusRail from '@/components/StatusRail';
 import { VALID_TRANSITIONS } from '@/utils/statusPipeline';
+import { toPipelineStatus } from '@/app/portal/_components/statusConfig';
 import { advanceStatus } from '../_actions/projectActions';
 import ShipmentsTab from './ShipmentsTab';
 import InstallTasksTab from './InstallTasksTab';
@@ -66,7 +67,7 @@ export default function ProjectDetailClient({
 
         {/* ── Status rail card ───────────────────────────────────────────── */}
         <div className="bg-white border-b border-zinc-200 px-5 pt-4 pb-3 shrink-0">
-          <StatusRail currentStatus={project.status} />
+          <StatusRail currentStatus={toPipelineStatus(project.status)} />
         </div>
 
         {/* ── Key stats + Advance Status ─────────────────────────────────── */}
