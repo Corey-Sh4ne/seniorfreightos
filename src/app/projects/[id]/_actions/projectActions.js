@@ -153,6 +153,73 @@ export async function deleteProject(projectId) {
   redirect('/projects');
 }
 
+const SHIPMENT_CATEGORIES = [
+  'Casegoods', 'Seating', 'Mattresses & Bedding', 'Window Treatments',
+  'Art & Decor', 'Lighting', 'Signage', 'Appliances', 'Flooring',
+  'Outdoor Furniture', 'Fitness Equipment',
+];
+
+const INSTALL_TASK_TYPES = [
+  'assemble', 'hang_art', 'mount_tv', 'place', 'debris', 'window_treat',
+];
+
+/**
+ * Insert a new shipment row on a project. Admin only.
+ */
+export async function addShipment(projectId, formData) {
+  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+
+  const vendor      = String(formData.get('vendor')      ?? '').trim();
+  const category    = String(formData.get('category')    ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  const qty         = parseInt(formData.get('qty') ?? '0', 10) || 0;
+  const weightPerUnitLbs = parseFloat(formData.get('weight_per_unit_lbs') ?? '0') || 0;
+  const cartons     = parseInt(formData.get('cartons') ?? '0', 10) || 0;
+  const etaRaw      = String(formData.get('eta') ?? '').trim();
+  const eta         = etaRaw || null;
+
+  if (!vendor)                              return { error: 'Vendor is required.' };
+  if (!SHIPMENT_CATEGORIES.includes(category)) return { error: 'Invalid category.' };
+  if (!description)                         return { error: 'Description is required.' };
+  if (qty < 1)                              return { error: 'Qty must be at least 1.' };
+  if (weightPerUnitLbs < 0)                 return { error: 'Weight cannot be negative.' };
+
+  await query(
+    `INSERT INTO shipments
+       (project_id, vendor, category, description, qty, weight_per_unit_lbs, cartons, eta)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [projectId, vendor, category, description, qty, weightPerUnitLbs, cartons, eta],
+  );
+
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/ops');
+  return { ok: true };
+}
+
+/**
+ * Insert a new install task row on a project. Admin only.
+ */
+export async function addInstallTask(projectId, formData) {
+  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+
+  const type  = String(formData.get('type')  ?? '').trim();
+  const qty   = parseInt(formData.get('qty') ?? '0', 10) || 0;
+  const notes = String(formData.get('notes') ?? '').trim();
+
+  if (!INSTALL_TASK_TYPES.includes(type)) return { error: 'Invalid task type.' };
+  if (qty < 1)                            return { error: 'Qty must be at least 1.' };
+
+  await query(
+    `INSERT INTO install_tasks (project_id, type, qty, notes)
+     VALUES ($1, $2, $3, $4)`,
+    [projectId, type, qty, notes],
+  );
+
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/ops');
+  return { ok: true };
+}
+
 /**
  * Toggle the received flag on a shipment.
  */

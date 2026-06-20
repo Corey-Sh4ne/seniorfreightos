@@ -4,9 +4,8 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/app/dashboard/_components/Sidebar';
 import StatusRail from '@/components/StatusRail';
-import { VALID_TRANSITIONS } from '@/utils/statusPipeline';
 import { toPipelineStatus, pillStyle } from '@/app/portal/_components/statusConfig';
-import { advanceStatus, deleteProject } from '../_actions/projectActions';
+import { deleteProject } from '../_actions/projectActions';
 import ConfirmModal from '@/components/ConfirmModal';
 import ShipmentsTab from './ShipmentsTab';
 import InstallTasksTab from './InstallTasksTab';
@@ -34,26 +33,17 @@ export default function ProjectDetailClient({
   rateCards = [], suggestedRateCardId = null, defaultRateCardId = null,
 }) {
   const [activeTab, setActiveTab] = useState('Shipments');
-  const [pending, startTransition] = useTransition();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [deletePending, startDeleteTransition] = useTransition();
   const isAdmin = role === 'admin';
 
-  // VALID_TRANSITIONS is keyed by pipeline labels, not raw DB values, so we must
-  // normalize project.status before the lookup or the button stays disabled.
-  const nextOptions   = VALID_TRANSITIONS[toPipelineStatus(project.status)] ?? [];
-  const canAdvance    = nextOptions.length > 0;
   const totalWeight   = shipments.reduce((s, sh) => s + sh.qty * sh.weightPerUnitLbs, 0);
   const visibleTabs   = isAdmin ? ALL_TABS : ALL_TABS.filter((t) => t !== 'Pricing Quote');
   const startDateStr  = project.createdAt ? DATE_FMT.format(new Date(project.createdAt)) : '—';
   const statusLabel   = project.status
     ? project.status.charAt(0).toUpperCase() + project.status.slice(1)
     : '—';
-
-  function handleAdvance() {
-    startTransition(() => advanceStatus(project.id));
-  }
 
   function handleDelete() {
     setDeleteError(null);
@@ -107,7 +97,7 @@ export default function ProjectDetailClient({
           </div>
         </div>
 
-        {/* ── Key stats + Advance Status ─────────────────────────────────── */}
+        {/* ── Key stats ──────────────────────────────────────────────────── */}
         <div className="bg-white border-b border-zinc-200 px-4 pt-1 pb-4 shrink-0">
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-200 shadow-sm bg-zinc-50/60 px-3 py-3">
             <StatCard label="Total Weight"   value={`${totalWeight.toLocaleString()} lb`} />
@@ -119,18 +109,6 @@ export default function ProjectDetailClient({
               danger={project.rushDelivery}
             />
             <StatCard label="Start" value={startDateStr} />
-
-            <div className="ml-auto shrink-0">
-              <button
-                onClick={handleAdvance}
-                disabled={!canAdvance || pending}
-                className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-700 active:bg-zinc-800
-                           disabled:bg-zinc-300 disabled:cursor-not-allowed text-white text-sm
-                           font-semibold px-5 py-2.5 rounded-lg transition-colors"
-              >
-                ▶&nbsp;{pending ? 'Advancing…' : 'Advance Status'}
-              </button>
-            </div>
           </div>
         </div>
 
