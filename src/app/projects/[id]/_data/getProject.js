@@ -1,4 +1,5 @@
 import { query } from '@/db/index';
+import { rowToRateCard } from '@/app/rate-card/_lib/rateCardFields';
 
 /**
  * Fetch a single project by UUID.
@@ -8,7 +9,8 @@ export async function getProjectById(id) {
   const { rows } = await query(
     `SELECT id, code, client_name, facility_name, facility_address,
             contact_name, contact_email, miles_from_hub, status,
-            storage_days, rush_delivery, rates, notes, created_at
+            storage_days, rush_delivery, rates, notes, created_at,
+            updated_at, quoted_price, accepted_at
      FROM projects WHERE id = $1`,
     [id],
   );
@@ -29,6 +31,9 @@ export async function getProjectById(id) {
     rates:           r.rates ?? {},
     notes:           r.notes ?? '',
     createdAt:       r.created_at,
+    updatedAt:       r.updated_at,
+    quotedPrice:     r.quoted_price ?? null,
+    acceptedAt:      r.accepted_at ?? null,
   };
 }
 
@@ -53,6 +58,36 @@ export async function getShipmentsByProjectId(projectId) {
     eta:              r.eta ? r.eta.toISOString().slice(0, 10) : null,
     received:         r.received,
   }));
+}
+
+/**
+ * Fetch the rate cards available for quoting a project, plus the IDs of the
+ * client's assigned ("suggested") card and the system default card. The admin
+ * quote tab uses these to build a grouped Rate Card dropdown and to recalculate
+ * the quote client-side when the selection changes.
+ *
+ * @param {string} clientName - the project's client_name (for the suggested card)
+ */
+export async function getRateCardsForQuote(clientName) {
+  const [cardsRes, assignmentRes] = await Promise.all([
+    query('SELECT * FROM rate_cards ORDER BY name ASC'),
+    clientName
+      ? query(
+          'SELECT rate_card_id FROM client_rate_assignments WHERE client_name = $1',
+          [clientName],
+        )
+      : Promise.resolve({ rows: [] }),
+  ]);
+
+  const rateCards = cardsRes.rows.map(rowToRateCard);
+  const defaultCard = rateCards.find((c) => c.isDefault) ?? null;
+  const suggestedRateCardId = assignmentRes.rows[0]?.rate_card_id ?? null;
+
+  return {
+    rateCards,
+    suggestedRateCardId,
+    defaultRateCardId: defaultCard?.id ?? null,
+  };
 }
 
 /**

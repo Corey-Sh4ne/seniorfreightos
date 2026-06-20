@@ -6,6 +6,7 @@ import { getProjects }     from './_data/getProjects';
 import { getOpsBoardData } from './_data/getOpsBoardData';
 import {
   getPortalProjects,
+  getPortalQuotes,
   getPortalShipmentsForProject,
 } from '@/app/portal/_data/getPortalProjects';
 import { getCurrentRole } from '@/app/ops/_lib/auth';
@@ -38,7 +39,10 @@ export default async function DashboardPage() {
   // "View as Client — <Name>" — render the portal scoped to that clientName.
   const clientName = parseClientName(viewAs);
   if (clientName) {
-    const projects = await getPortalProjects(clientName);
+    const [quotes, projects] = await Promise.all([
+      getPortalQuotes(clientName),
+      getPortalProjects(clientName),
+    ]);
     const shipmentArrays = await Promise.all(
       projects.map((p) => getPortalShipmentsForProject(p.id)),
     );
@@ -47,7 +51,7 @@ export default async function DashboardPage() {
     );
     return (
       <ImpersonationView viewAs={viewAs}>
-        <PortalClient projects={projects} shipmentMap={shipmentMap} />
+        <PortalClient quotes={quotes} projects={projects} shipmentMap={shipmentMap} />
       </ImpersonationView>
     );
   }

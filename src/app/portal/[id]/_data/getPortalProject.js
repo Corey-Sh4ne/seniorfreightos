@@ -9,19 +9,24 @@ import { query } from '@/db/index';
  * view, which can read any project by id.
  */
 export async function getPortalProjectById(id, clientName) {
+  // quoted_price holds the client-facing itemized quote (no internal rates,
+  // margin, or overhead), so it is safe to expose in the portal. accepted_at is
+  // a simple timestamp.
   const { rows } = clientName
     ? await query(
-        `SELECT id, code, facility_name, facility_address,
+        `SELECT id, code, client_name, facility_name, facility_address,
                 contact_name, contact_email, status,
-                storage_days, rush_delivery, created_at
+                storage_days, rush_delivery, created_at,
+                quoted_price, accepted_at
            FROM projects
           WHERE id = $1 AND client_name = $2`,
         [id, clientName],
       )
     : await query(
-        `SELECT id, code, facility_name, facility_address,
+        `SELECT id, code, client_name, facility_name, facility_address,
                 contact_name, contact_email, status,
-                storage_days, rush_delivery, created_at
+                storage_days, rush_delivery, created_at,
+                quoted_price, accepted_at
            FROM projects
           WHERE id = $1`,
         [id],
@@ -31,6 +36,7 @@ export async function getPortalProjectById(id, clientName) {
   return {
     id:              r.id,
     code:            r.code,
+    clientName:      r.client_name,
     facilityName:    r.facility_name,
     facilityAddress: r.facility_address,
     contactName:     r.contact_name,
@@ -39,6 +45,8 @@ export async function getPortalProjectById(id, clientName) {
     storageDays:     Number(r.storage_days),
     rushDelivery:    r.rush_delivery,
     createdAt:       r.created_at,
+    quotedPrice:     r.quoted_price ?? null,
+    acceptedAt:      r.accepted_at ?? null,
   };
 }
 

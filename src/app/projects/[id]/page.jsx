@@ -1,21 +1,12 @@
 import { notFound, redirect } from 'next/navigation';
 import { auth, clerkClient } from '@clerk/nextjs/server';
-import { calculateProjectPricing } from '@/utils/pricingEngine';
-import { getProjectById, getShipmentsByProjectId, getInstallTasksByProjectId } from './_data/getProject';
+import {
+  getProjectById,
+  getShipmentsByProjectId,
+  getInstallTasksByProjectId,
+  getRateCardsForQuote,
+} from './_data/getProject';
 import ProjectDetailClient from './_components/ProjectDetailClient';
-
-/**
- * DB install task types → pricingEngine task types.
- * The migration schema uses shorthand keys; pricingEngine uses full keys.
- */
-const TASK_TYPE_MAP = {
-  assemble:     'assemble_furniture',
-  hang_art:     'hang_artwork',
-  mount_tv:     'mount_tv_fixture',
-  place:        'place_and_position',
-  debris:       'debris_removal',
-  window_treat: 'install_window_treatments',
-};
 
 export default async function ProjectDetailPage({ params }) {
   const { id } = await params;
@@ -38,22 +29,11 @@ export default async function ProjectDetailPage({ params }) {
 
   if (!project) notFound();
 
-  // Compute pricing for admin only, and only if the rate card snapshot is present.
-  let pricing = null;
+  // Rate cards power the admin quote tab's selector + live recalculation. Only
+  // admins ever see pricing, so skip the lookup entirely for client users.
+  let rateCardData = { rateCards: [], suggestedRateCardId: null, defaultRateCardId: null };
   if (isAdmin) {
-    const rates = project.rates ?? {};
-    const hasRates = rates.receivingPerLb != null && rates.freightPerLb != null;
-    if (hasRates) {
-      try {
-        const mappedTasks = installTasks.map((t) => ({
-          ...t,
-          type: TASK_TYPE_MAP[t.type] ?? t.type,
-        }));
-        pricing = calculateProjectPricing(project, shipments, mappedTasks);
-      } catch {
-        // Rate card snapshot is incomplete — leave pricing as null
-      }
-    }
+    rateCardData = await getRateCardsForQuote(project.clientName);
   }
 
   return (
@@ -61,7 +41,9 @@ export default async function ProjectDetailPage({ params }) {
       project={project}
       shipments={shipments}
       installTasks={installTasks}
-      pricing={pricing}
+      rateCards={rateCardData.rateCards}
+      suggestedRateCardId={rateCardData.suggestedRateCardId}
+      defaultRateCardId={rateCardData.defaultRateCardId}
       role={role}
     />
   );

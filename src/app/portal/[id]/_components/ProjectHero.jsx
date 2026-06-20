@@ -4,17 +4,19 @@ import StatusPill from '@/app/portal/_components/StatusPill';
 import StatCell from '@/app/portal/_components/StatCell';
 import { borderAccent, toPipelineStatus, stagesComplete } from '@/app/portal/_components/statusConfig';
 import { PIPELINE_STATUSES } from '@/utils/statusPipeline';
+import QuotePanel from './QuotePanel';
 
 function formatDate(val) {
   if (!val) return '—';
   return new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function ProjectHero({ project }) {
+export default function ProjectHero({ project, clientName }) {
   const totalStages = PIPELINE_STATUSES.length;
   const complete    = stagesComplete(project.status);
 
   return (
+    <>
     <article
       className={`bg-white rounded-xl border border-zinc-200 border-l-4 overflow-hidden ${borderAccent(project.status)} shadow-sm`}
     >
@@ -76,5 +78,8 @@ export default function ProjectHero({ project }) {
         </div>
       </div>
     </article>
+
+    <QuotePanel project={project} clientName={clientName} />
+    </>
   );
 }

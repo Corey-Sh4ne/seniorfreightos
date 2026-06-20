@@ -2,34 +2,48 @@ export const dynamic = 'force-dynamic';
 
 import { auth } from '@clerk/nextjs/server';
 import Sidebar from '@/app/dashboard/_components/Sidebar';
-import RateCardForm from './_components/RateCardForm';
-import { loadRateCard } from './_actions/saveRateCard';
+import { query } from '@/db/index';
+import { rowToRateCard } from './_lib/rateCardFields';
 import { DEFAULT_RATE_CARD } from '@/models/RateCard';
+import RateCardClient from './_components/RateCardClient';
 
 export const metadata = {
-  title: 'Rate Card — SeniorFreightOS',
+  title: 'Rate Cards — SeniorFreightOS',
 };
 
 export default async function RateCardPage() {
   await auth();
 
-  const rates = await loadRateCard();
+  const [cardsRes, assignmentsRes, clientsRes] = await Promise.all([
+    query('SELECT * FROM rate_cards ORDER BY is_default DESC, name ASC'),
+    query('SELECT client_name, rate_card_id FROM client_rate_assignments'),
+    query(
+      `SELECT DISTINCT client_name FROM projects
+        WHERE client_name IS NOT NULL AND client_name <> ''
+        ORDER BY client_name ASC`,
+    ),
+  ]);
+
+  const rateCards = cardsRes.rows.map(rowToRateCard);
+  const assignments = assignmentsRes.rows.map((r) => ({
+    clientName: r.client_name,
+    rateCardId: r.rate_card_id,
+  }));
+  const clientNames = clientsRes.rows.map((r) => r.client_name);
 
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-50">
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="shrink-0 border-b border-zinc-200 bg-white px-6 py-4">
-          <h1 className="text-lg font-semibold leading-tight text-zinc-900">Rate Card</h1>
-          <p className="mt-0.5 text-xs text-zinc-400">
-            Company-wide pricing rates used when quoting new projects
-          </p>
-        </header>
-
-        <main className="flex-1 overflow-y-auto px-6 py-5">
+        <main className="flex-1 overflow-y-auto px-6 py-6">
           <div className="mx-auto max-w-4xl">
-            <RateCardForm rates={rates} defaultRates={DEFAULT_RATE_CARD} />
+            <RateCardClient
+              rateCards={rateCards}
+              assignments={assignments}
+              clientNames={clientNames}
+              defaultRates={DEFAULT_RATE_CARD}
+            />
           </div>
         </main>
       </div>

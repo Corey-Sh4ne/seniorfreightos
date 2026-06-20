@@ -29,7 +29,8 @@ function StatCard({ label, value, danger }) {
 const ALL_TABS = ['Shipments', 'Install Tasks', 'Pricing Quote', 'Notes'];
 
 export default function ProjectDetailClient({
-  project, shipments, installTasks, pricing, role,
+  project, shipments, installTasks, role,
+  rateCards = [], suggestedRateCardId = null, defaultRateCardId = null,
 }) {
   const [activeTab, setActiveTab] = useState('Shipments');
   const [pending, startTransition] = useTransition();
@@ -141,7 +142,14 @@ export default function ProjectDetailClient({
             <InstallTasksTab installTasks={installTasks} projectId={project.id} />
           )}
           {activeTab === 'Pricing Quote' && isAdmin && (
-            <PricingQuoteTab pricing={pricing} project={project} />
+            <PricingQuoteTab
+              project={project}
+              shipments={shipments}
+              installTasks={installTasks}
+              rateCards={rateCards}
+              suggestedRateCardId={suggestedRateCardId}
+              defaultRateCardId={defaultRateCardId}
+            />
           )}
           {activeTab === 'Notes' && (
             <div className="bg-white rounded-lg border border-zinc-200 p-5 max-w-2xl">

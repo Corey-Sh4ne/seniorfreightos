@@ -42,6 +42,13 @@ export default async function PortalProjectPage({ params }) {
     notFound();
   }
 
+  // This page only shows active projects. A quote (quoted/denied) is reviewed on
+  // the dedicated quote page; a prospect is never client-visible.
+  if (project.status === 'quoted' || project.status === 'denied') {
+    redirect(`/portal/quotes/${project.id}`);
+  }
+  if (project.status === 'prospect') redirect('/portal');
+
   const [shipments, installTasks] = await Promise.all([
     getPortalProjectShipments(project.id),
     getPortalProjectInstallTasks(project.id),
@@ -74,7 +81,7 @@ export default async function PortalProjectPage({ params }) {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-        <ProjectHero project={project} />
+        <ProjectHero project={project} clientName={clientName} />
 
         <section className="bg-white rounded-xl border border-zinc-200 p-5 sm:p-6 shadow-sm">
           <PortalDetailTabs shipments={shipments} installTasks={installTasks} />

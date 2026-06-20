@@ -1,113 +1,218 @@
-const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+'use client';
 
-const INSTALL_LABELS = {
-  assemble_furniture:        'Install — Assembly',
-  hang_artwork:              'Install — Art Hang',
-  mount_tv_fixture:          'Install — TV / Fixture Mount',
-  place_and_position:        'Install — Place & Position',
-  debris_removal:            'Install — Debris Removal',
-  install_window_treatments: 'Install — Window Treatments',
+import { useMemo, useState, useTransition } from 'react';
+import Link from 'next/link';
+import QuoteBreakdown from '@/components/QuoteBreakdown';
+import { sendQuote, resendQuote } from '../_actions/projectActions';
+
+const DATE_FMT = new Intl.DateTimeFormat('en-US', {
+  month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit',
+});
+
+/** DB install task types → pricingEngine / rate card task types. */
+const TASK_TYPE_MAP = {
+  assemble: 'assemble_furniture',
+  hang_art: 'hang_artwork',
+  mount_tv: 'mount_tv_fixture',
+  place: 'place_and_position',
+  debris: 'debris_removal',
+  window_treat: 'install_window_treatments',
 };
 
-function pct(val) {
-  return `${Math.round(val * 100)}%`;
-}
+const round2 = (n) => Math.round(n * 100) / 100;
 
-function Row({ label, formula, amount, bold, separator }) {
-  return (
-    <tr className={separator ? 'border-t border-blue-700' : ''}>
-      <td className={`py-2 pr-4 text-sm ${bold ? 'font-bold text-white' : 'text-blue-100'}`}>
-        {label}
-      </td>
-      <td className="py-2 pr-8 text-xs text-blue-400 text-right whitespace-nowrap">
-        {formula}
-      </td>
-      <td className={`py-2 text-right text-sm ${bold ? 'font-bold text-white' : 'text-blue-100'}`}>
-        {USD.format(amount)}
-      </td>
-    </tr>
+/**
+ * Inline pricing math — mirrors src/utils/pricingEngine.js exactly but is kept
+ * local to this component so the quote preview recalculates instantly client-side
+ * when the rate card selection changes. pricingEngine.js is never imported here.
+ */
+function buildBreakdown(rates, project, shipments, installTasks) {
+  const totalWeight = shipments.reduce((s, sh) => s + sh.qty * sh.weightPerUnitLbs, 0);
+  const taskRates = rates.installTaskRates ?? {};
+
+  const receivingCost = round2(totalWeight * rates.receivingPerLb);
+  const storageCost = round2(totalWeight * rates.storagePerLbPerDay * project.storageDays);
+
+  const distanceFactor = 1 + Math.max(0, project.milesFromHub - 50) * 0.0015;
+  const freightCost = round2(
+    Math.max(totalWeight * rates.freightPerLb * distanceFactor, rates.freightMinimum),
   );
+
+  const fuelSurcharge = round2(freightCost * rates.fuelSurchargePct);
+  const rushSurcharge = project.rushDelivery
+    ? round2((freightCost + fuelSurcharge) * rates.rushSurchargePct)
+    : 0;
+
+  const installLineItems = installTasks.map((task) => {
+    const type = TASK_TYPE_MAP[task.type] ?? task.type;
+    const rate = taskRates[type] ?? 0;
+    return { type, qty: task.qty, rate, total: round2(task.qty * rate) };
+  });
+  const installCost = round2(installLineItems.reduce((s, i) => s + i.total, 0));
+
+  const directCost = round2(
+    receivingCost + storageCost + freightCost + fuelSurcharge + rushSurcharge + installCost,
+  );
+  const overhead = round2(directCost * rates.overheadPct);
+  const fullyLoadedCost = round2(directCost + overhead);
+  const margin = round2(fullyLoadedCost * rates.marginPct);
+  const total = round2(fullyLoadedCost + margin);
+
+  return {
+    totalWeight,
+    receiving: { weight: totalWeight, rate: rates.receivingPerLb, total: receivingCost },
+    storage: { weight: totalWeight, days: project.storageDays, rate: rates.storagePerLbPerDay, total: storageCost },
+    freight: { weight: totalWeight, rate: rates.freightPerLb, min: rates.freightMinimum, total: freightCost },
+    fuel: { pct: rates.fuelSurchargePct, total: fuelSurcharge },
+    rush: project.rushDelivery ? { pct: rates.rushSurchargePct, total: rushSurcharge } : null,
+    installTasks: installLineItems,
+    installCost,
+    subtotal: directCost,
+    overhead: { pct: rates.overheadPct, total: overhead },
+    margin: { pct: rates.marginPct, total: margin },
+    total,
+  };
 }
 
-export default function PricingQuoteTab({ pricing, project }) {
-  if (!pricing) {
-    return (
-      <div className="bg-[#1f3864] rounded-xl p-6 text-white">
-        <p className="text-sm font-semibold mb-2">🔒 Pricing Quote — Visible to Admin Only</p>
-        <p className="text-blue-300 text-sm">
-          Pricing cannot be calculated — the project rate card is not yet configured.
-        </p>
-      </div>
-    );
-  }
-
-  const r = project.rates;
-  const wt = pricing.totalWeight.toLocaleString();
-
+function Shell({ children }) {
   return (
     <div className="bg-[#1f3864] rounded-xl p-6 text-white">
       <p className="text-sm font-semibold mb-5">🔒 Pricing Quote — Visible to Admin Only</p>
-
-      <table className="w-full">
-        <tbody>
-          <Row label="Receiving" formula={`${wt} lb × $${r.receivingPerLb}`} amount={pricing.receivingCost} />
-          <Row
-            label="Storage"
-            formula={`${wt} lb × $${r.storagePerLbPerDay} × ${project.storageDays} days`}
-            amount={pricing.storageCost}
-          />
-          <Row
-            label="Freight"
-            formula={`${wt} lb × $${r.freightPerLb} × ${pricing.distanceFactor.toFixed(3)} dist.`}
-            amount={pricing.freightCost}
-          />
-          <Row
-            label={`Fuel Surcharge (${pct(r.fuelSurchargePct)})`}
-            formula={`${USD.format(pricing.freightCost)} × ${pct(r.fuelSurchargePct)}`}
-            amount={pricing.fuelSurcharge}
-          />
-          {project.rushDelivery && (
-            <Row
-              label={`Rush Surcharge (${pct(r.rushSurchargePct)})`}
-              formula=""
-              amount={pricing.rushSurcharge}
-            />
-          )}
-
-          {pricing.installLineItems.map((item, i) => (
-            <Row
-              key={i}
-              label={INSTALL_LABELS[item.type] ?? item.type}
-              formula={`${item.qty} × $${item.rate}`}
-              amount={item.amount}
-            />
-          ))}
-
-          <Row label="Direct Cost Subtotal" formula="" amount={pricing.directCost} bold separator />
-          <Row
-            label={`Overhead (${pct(r.overheadPct)})`}
-            formula={`${USD.format(pricing.directCost)} × ${pct(r.overheadPct)}`}
-            amount={pricing.overhead}
-          />
-          <Row label="Fully Loaded Cost" formula="" amount={pricing.fullyLoadedCost} bold separator />
-          <Row
-            label={`Margin (${pct(r.marginPct)})`}
-            formula={`${USD.format(pricing.fullyLoadedCost)} × ${pct(r.marginPct)}`}
-            amount={pricing.margin}
-          />
-        </tbody>
-      </table>
-
-      <div className="mt-4 pt-4 border-t-2 border-white flex items-center justify-between">
-        <span className="text-base font-bold">Total Project Bid</span>
-        <span className="text-2xl font-extrabold">{USD.format(pricing.totalProjectBid)}</span>
-      </div>
-
-      <div className="mt-5">
-        <button className="bg-blue-500 hover:bg-blue-400 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
-          Send Quote to Client →
-        </button>
-      </div>
+      {children}
     </div>
+  );
+}
+
+export default function PricingQuoteTab({
+  project, shipments, installTasks,
+  rateCards = [], suggestedRateCardId, defaultRateCardId,
+}) {
+  const { status } = project;
+  const [pending, startTransition] = useTransition();
+
+  // Build the grouped dropdown ordering: Suggested → Default → Other (A-Z).
+  const groups = useMemo(() => {
+    const suggested = rateCards.find((c) => c.id === suggestedRateCardId) ?? null;
+    const def = rateCards.find((c) => c.id === defaultRateCardId) ?? null;
+    const usedIds = new Set([suggested?.id, def?.id].filter(Boolean));
+    const others = rateCards
+      .filter((c) => !usedIds.has(c.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { suggested, def, others };
+  }, [rateCards, suggestedRateCardId, defaultRateCardId]);
+
+  // Initial selection: the card already attached to a sent quote, else suggested,
+  // else default, else the first available card.
+  const initialId =
+    (project.rates?.rateCardId && rateCards.some((c) => c.id === project.rates.rateCardId)
+      ? project.rates.rateCardId
+      : null) ||
+    groups.suggested?.id || groups.def?.id || rateCards[0]?.id || '';
+  const [selectedId, setSelectedId] = useState(initialId);
+
+  // No rate card configured at all → blocked state, no send button.
+  if (rateCards.length === 0) {
+    return (
+      <Shell>
+        <p className="text-blue-100 text-sm mb-4">
+          Cannot send a quote — no rate card has been configured yet.
+        </p>
+        <Link
+          href="/rate-card"
+          className="inline-flex items-center text-sm font-semibold text-blue-300 hover:text-white transition-colors"
+        >
+          Set up a rate card →
+        </Link>
+      </Shell>
+    );
+  }
+
+  const selectedCard = rateCards.find((c) => c.id === selectedId) ?? rateCards[0];
+  const liveBreakdown = buildBreakdown(selectedCard.rates, project, shipments, installTasks);
+  const savedBreakdown = project.quotedPrice ?? null;
+  const sentAt = project.updatedAt ? DATE_FMT.format(new Date(project.updatedAt)) : null;
+
+  function handleSend() {
+    if (!window.confirm(
+      `Send this quote to ${project.clientName}? They will receive it on their portal for review.`,
+    )) return;
+    startTransition(() => sendQuote(project.id, selectedCard.id, liveBreakdown));
+  }
+
+  function handleResend() {
+    startTransition(() => resendQuote(project.id, selectedCard.id, liveBreakdown));
+  }
+
+  // Quote already sent → read-only confirmation + the snapshotted breakdown.
+  if (status === 'quoted') {
+    return (
+      <Shell>
+        <div className="bg-emerald-500/15 border border-emerald-400/40 rounded-lg px-4 py-3 mb-5">
+          <p className="text-sm font-semibold text-emerald-300">Quote sent — awaiting client response</p>
+          {sentAt && <p className="text-xs text-emerald-200/80 mt-0.5">Sent {sentAt}</p>}
+        </div>
+        <QuoteBreakdown breakdown={savedBreakdown ?? liveBreakdown} theme="dark" />
+      </Shell>
+    );
+  }
+
+  const denied = status === 'denied';
+  const canSend = status === 'prospect' || denied;
+
+  return (
+    <Shell>
+      {denied && (
+        <div className="bg-red-500/15 border border-red-400/40 rounded-lg px-4 py-3 mb-5">
+          <p className="text-sm font-semibold text-red-300">Client denied this quote</p>
+        </div>
+      )}
+
+      <label className="block mb-5">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-blue-300 mb-1.5">
+          Rate Card
+        </span>
+        <select
+          value={selectedId}
+          onChange={(e) => setSelectedId(e.target.value)}
+          className="w-full max-w-md bg-[#16294a] border border-blue-700 text-white text-sm rounded-lg
+                     px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          {groups.suggested && (
+            <optgroup label="Suggested">
+              <option value={groups.suggested.id}>{groups.suggested.name}</option>
+            </optgroup>
+          )}
+          {groups.def && (
+            <optgroup label="Default">
+              <option value={groups.def.id}>{groups.def.name}</option>
+            </optgroup>
+          )}
+          {groups.others.length > 0 && (
+            <optgroup label="Other Rate Cards">
+              {groups.others.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </optgroup>
+          )}
+        </select>
+      </label>
+
+      <QuoteBreakdown breakdown={liveBreakdown} theme="dark" />
+
+      {canSend && (
+        <div className="mt-5">
+          <button
+            onClick={denied ? handleResend : handleSend}
+            disabled={pending}
+            className="bg-blue-500 hover:bg-blue-400 disabled:bg-blue-500/50 disabled:cursor-not-allowed
+                       text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
+          >
+            {pending
+              ? (denied ? 'Resending…' : 'Sending…')
+              : (denied ? 'Revise & Resend' : 'Send Quote to Client')}
+          </button>
+        </div>
+      )}
+    </Shell>
   );
 }

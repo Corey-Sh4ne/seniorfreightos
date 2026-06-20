@@ -8,6 +8,7 @@ import { PIPELINE_STATUSES } from '@/utils/statusPipeline';
 export const DB_TO_PIPELINE = {
   prospect:   'Quote Requested',
   quoted:     'Quote Sent',
+  denied:     'Quote Denied',
   awarded:    'Approved',
   receiving:  'Receiving',
   staging:    'Consolidating',

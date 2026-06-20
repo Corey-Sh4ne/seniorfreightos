@@ -1,12 +1,19 @@
 import Link from 'next/link';
 import Sidebar from '@/app/dashboard/_components/Sidebar';
 import NewProjectForm from './_components/NewProjectForm';
+import { query } from '@/db/index';
 
 export const metadata = {
   title: 'New Project — SeniorFreightOS',
 };
 
-export default function NewProjectPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function NewProjectPage() {
+  const { rows: clients } = await query(
+    'SELECT id, name, contact_name, contact_email FROM clients ORDER BY name ASC',
+  );
+
   return (
     <div className="flex h-screen bg-zinc-50 overflow-hidden">
       <Sidebar />
@@ -30,7 +37,7 @@ export default function NewProjectPage() {
               A project code (FTE-YYYY-###) will be auto-generated on save.
               Fields marked <span className="text-red-500 font-semibold">*</span> are required.
             </p>
-            <NewProjectForm />
+            <NewProjectForm clients={clients} />
           </div>
         </main>
       </div>

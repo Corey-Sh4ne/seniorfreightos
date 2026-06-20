@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createProject } from '../_actions/createProject';
 
@@ -27,24 +27,117 @@ const INPUT_CLS = [
   'disabled:opacity-50',
 ].join(' ');
 
-export default function NewProjectForm() {
+export default function NewProjectForm({ clients = [] }) {
   const [state, action, pending] = useActionState(createProject, INITIAL_STATE);
   const errors = state?.errors ?? {};
 
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const comboRef = useRef(null);
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (comboRef.current && !comboRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  const trimmed = query.trim();
+  const lower = trimmed.toLowerCase();
+  const filtered = trimmed
+    ? clients.filter((c) => c.name.toLowerCase().includes(lower))
+    : clients;
+  const selected = clients.find((c) => c.name === query) ?? null;
+  const showNotFound = trimmed.length > 0 && !selected;
+  const canSubmit = !pending && !!selected;
+
   return (
     <form action={action} className="space-y-5" noValidate>
-      {/* Client Name */}
+      {/* Client Name (combobox) */}
       <div>
-        <Label htmlFor="client_name" required>Client Name</Label>
-        <input
-          id="client_name"
-          name="client_name"
-          type="text"
-          autoComplete="organization"
-          disabled={pending}
-          placeholder="e.g. Sunrise Senior Living"
-          className={`${INPUT_CLS} ${errors.client_name ? 'border-red-400' : ''}`}
-        />
+        <Label htmlFor="client_name_search" required>Client Name</Label>
+        <div className="relative" ref={comboRef}>
+          <input
+            id="client_name_search"
+            type="text"
+            autoComplete="off"
+            disabled={pending}
+            placeholder="Search clients…"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={open}
+            aria-controls="client-name-listbox"
+            className={`${INPUT_CLS} ${
+              errors.client_name || showNotFound ? 'border-red-400' : ''
+            }`}
+          />
+          {/* Hidden input is the value submitted with the form */}
+          <input
+            type="hidden"
+            name="client_name"
+            value={selected ? selected.name : ''}
+          />
+
+          {open && filtered.length > 0 && (
+            <ul
+              id="client-name-listbox"
+              role="listbox"
+              className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg"
+            >
+              {filtered.map((c) => (
+                <li
+                  key={c.id}
+                  role="option"
+                  aria-selected={c.name === query}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setQuery(c.name);
+                    setOpen(false);
+                  }}
+                  className={`cursor-pointer px-3 py-2 text-sm hover:bg-zinc-100 ${
+                    c.name === query ? 'bg-zinc-50 font-medium' : ''
+                  }`}
+                >
+                  {c.name}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {open && trimmed.length > 0 && filtered.length === 0 && (
+            <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-500 shadow-lg">
+              No matching clients.
+            </div>
+          )}
+        </div>
+
+        {selected && (selected.contact_name || selected.contact_email) && (
+          <p className="mt-1.5 text-xs text-zinc-500">
+            {selected.contact_name}
+            {selected.contact_name && selected.contact_email && ' · '}
+            {selected.contact_email}
+          </p>
+        )}
+
+        {showNotFound && (
+          <p className="mt-1 text-xs text-amber-600">
+            Client not found — add them on the{' '}
+            <Link href="/clients" className="underline hover:text-amber-700">
+              Clients page
+            </Link>{' '}
+            first.
+          </p>
+        )}
+
         <FieldError msg={errors.client_name} />
       </div>
 
@@ -124,7 +217,7 @@ export default function NewProjectForm() {
       <div className="flex items-center gap-4 pt-2">
         <button
           type="submit"
-          disabled={pending}
+          disabled={!canSubmit}
           className="bg-zinc-900 hover:bg-zinc-700 active:bg-zinc-800 disabled:bg-zinc-300 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
         >
           {pending ? 'Creating…' : 'Create Project'}
