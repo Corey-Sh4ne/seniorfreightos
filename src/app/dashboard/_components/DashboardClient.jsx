@@ -9,7 +9,7 @@ import ProjectsTable from './ProjectsTable';
 const INACTIVE_STATUSES = ['Quote', 'Installed', 'Delivered', 'quoted', 'complete', 'invoiced'];
 const DONE_STATUSES     = ['Installed', 'Delivered', 'complete', 'invoiced'];
 
-export default function DashboardClient({ projects }) {
+export default function DashboardClient({ projects, viewAs = 'admin' }) {
   const [search,       setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [clientFilter, setClientFilter] = useState('All');
@@ -46,7 +46,7 @@ export default function DashboardClient({ projects }) {
 
   return (
     <div className="flex h-screen bg-zinc-50 overflow-hidden">
-      <Sidebar />
+      <Sidebar viewAs={viewAs} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between shrink-0">
