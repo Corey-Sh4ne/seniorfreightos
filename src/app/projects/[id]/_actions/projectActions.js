@@ -138,6 +138,44 @@ export async function advanceStatus(projectId) {
 }
 
 /**
+ * Update editable project fields (facility, contact, distance/storage/rush, notes).
+ * client_name, code, and status are intentionally NOT editable here. Admin only.
+ */
+export async function updateProject(projectId, formData) {
+  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  if (!projectId) return { error: 'Missing project id.' };
+
+  const facilityName    = String(formData.get('facility_name')    ?? '').trim();
+  const facilityAddress = String(formData.get('facility_address') ?? '').trim();
+  const contactName     = String(formData.get('contact_name')     ?? '').trim();
+  const contactEmail    = String(formData.get('contact_email')    ?? '').trim();
+  const milesFromHub    = parseFloat(formData.get('miles_from_hub') ?? '0') || 0;
+  const storageDays     = parseInt(formData.get('storage_days')  ?? '0', 10) || 0;
+  const rushDelivery    = formData.get('rush_delivery') === 'on';
+  const notes           = String(formData.get('notes') ?? '');
+
+  if (!facilityName) return { error: 'Facility name is required.' };
+  if (milesFromHub < 0) return { error: 'Miles from hub cannot be negative.' };
+  if (storageDays < 0)  return { error: 'Storage days cannot be negative.' };
+
+  const { rowCount } = await query(
+    `UPDATE projects
+        SET facility_name = $1, facility_address = $2,
+            contact_name = $3, contact_email = $4,
+            miles_from_hub = $5, storage_days = $6,
+            rush_delivery = $7, notes = $8, updated_at = NOW()
+      WHERE id = $9`,
+    [facilityName, facilityAddress, contactName, contactEmail,
+     milesFromHub, storageDays, rushDelivery, notes, projectId],
+  );
+  if (!rowCount) return { error: 'Project not found.' };
+
+  revalidatePath('/projects');
+  revalidatePath(`/projects/${projectId}`);
+  return { ok: true };
+}
+
+/**
  * Permanently delete a project. Shipments and install_tasks rows are removed
  * automatically via ON DELETE CASCADE on their project_id FKs. Admin only.
  * Redirects to /projects on success.

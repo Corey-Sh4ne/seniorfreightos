@@ -7,6 +7,7 @@ import StatusRail from '@/components/StatusRail';
 import { toPipelineStatus, pillStyle } from '@/app/portal/_components/statusConfig';
 import { deleteProject } from '../_actions/projectActions';
 import ConfirmModal from '@/components/ConfirmModal';
+import EditProjectModal from './EditProjectModal';
 import ShipmentsTab from './ShipmentsTab';
 import InstallTasksTab from './InstallTasksTab';
 import PricingQuoteTab from './PricingQuoteTab';
@@ -33,6 +34,7 @@ export default function ProjectDetailClient({
   rateCards = [], suggestedRateCardId = null, defaultRateCardId = null,
 }) {
   const [activeTab, setActiveTab] = useState('Shipments');
+  const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [deletePending, startDeleteTransition] = useTransition();
@@ -79,13 +81,22 @@ export default function ProjectDetailClient({
             {statusLabel}
           </span>
           {isAdmin && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="shrink-0 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
-            >
-              Delete Project
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setShowEdit(true)}
+                className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+              >
+                Edit Project
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="shrink-0 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+              >
+                Delete Project
+              </button>
+            </>
           )}
         </header>
 
@@ -163,6 +174,13 @@ export default function ProjectDetailClient({
           )}
         </main>
       </div>
+
+      {showEdit && (
+        <EditProjectModal
+          project={project}
+          onClose={() => setShowEdit(false)}
+        />
+      )}
 
       {showDeleteConfirm && (
         <ConfirmModal
