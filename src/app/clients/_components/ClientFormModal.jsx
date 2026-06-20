@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import Modal from '@/app/rate-card/_components/Modal';
-import { createClient, updateClient } from '../_actions/clientActions';
+import ConfirmModal from '@/components/ConfirmModal';
+import { createClient, deleteClient, updateClient } from '../_actions/clientActions';
 
 const INPUT_CLS =
   'block w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 ' +
@@ -38,6 +39,9 @@ export default function ClientFormModal({
   const [clerkUserId, setClerkUserId] = useState(client?.clerkUserId ?? '');
   const [clerkSearch, setClerkSearch] = useState('');
   const [showClerkList, setShowClerkList] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deletePending, startDeleteTransition] = useTransition();
 
   const linkedSet = useMemo(() => new Set(linkedClerkIds), [linkedClerkIds]);
 
@@ -69,6 +73,19 @@ export default function ClientFormModal({
         : await createClient(fd);
       if (res?.error) setError(res.error);
       else onClose();
+    });
+  }
+
+  function handleDelete() {
+    setDeleteError(null);
+    startDeleteTransition(async () => {
+      const res = await deleteClient(client.id);
+      if (res?.error) {
+        setDeleteError(res.error);
+        return;
+      }
+      setShowDeleteConfirm(false);
+      onClose();
     });
   }
 
@@ -166,23 +183,53 @@ export default function ClientFormModal({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-zinc-200 pt-5">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
-          >
-            {pending ? 'Saving…' : 'Save'}
-          </button>
+        <div className="flex items-center justify-between gap-3 border-t border-zinc-200 pt-5">
+          {isEdit ? (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={pending || deletePending}
+              className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+            >
+              Delete Client
+            </button>
+          ) : (
+            <span />
+          )}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
+            >
+              {pending ? 'Saving…' : 'Save'}
+            </button>
+          </div>
         </div>
       </form>
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="Delete Client?"
+          message={`Are you sure you want to delete ${client.name}? This will not delete their projects but will remove the client record. Their Clerk account link will also be removed.`}
+          confirmLabel="Delete Client"
+          pending={deletePending}
+          error={deleteError}
+          onConfirm={handleDelete}
+          onClose={() => {
+            if (deletePending) return;
+            setShowDeleteConfirm(false);
+            setDeleteError(null);
+          }}
+        />
+      )}
     </Modal>
   );
 }

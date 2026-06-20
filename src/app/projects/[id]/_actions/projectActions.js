@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { query } from '@/db/index';
 import { VALID_TRANSITIONS } from '@/utils/statusPipeline';
@@ -134,6 +135,22 @@ export async function advanceStatus(projectId) {
   );
   revalidatePath(`/projects/${projectId}`);
   return { status: next };
+}
+
+/**
+ * Permanently delete a project. Shipments and install_tasks rows are removed
+ * automatically via ON DELETE CASCADE on their project_id FKs. Admin only.
+ * Redirects to /projects on success.
+ */
+export async function deleteProject(projectId) {
+  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+
+  const { rowCount } = await query('DELETE FROM projects WHERE id = $1', [projectId]);
+  if (!rowCount) return { error: 'Project not found.' };
+
+  revalidatePath('/projects');
+  revalidatePath('/dashboard');
+  redirect('/projects');
 }
 
 /**

@@ -93,6 +93,30 @@ export async function createClient(formData) {
   }
 }
 
+/**
+ * Permanently delete a client record. Existing projects keep their snapshotted
+ * client_name string and are not touched. If the client was linked to a Clerk
+ * portal account, clear clientName from that user's publicMetadata so they no
+ * longer scope into the deleted org. Admin only.
+ */
+export async function deleteClient(clientId) {
+  if (!(await requireAdmin())) return UNAUTHORIZED;
+  if (!clientId) return { error: 'Missing client id.' };
+
+  const { rows } = await query(
+    'SELECT clerk_user_id FROM clients WHERE id = $1',
+    [clientId],
+  );
+  if (!rows.length) return { error: 'Client not found.' };
+  const clerkUserId = rows[0].clerk_user_id || null;
+
+  await query('DELETE FROM clients WHERE id = $1', [clientId]);
+  if (clerkUserId) await clearClerkClientName(clerkUserId);
+
+  revalidatePath('/clients');
+  return { success: true };
+}
+
 export async function updateClient(clientId, formData) {
   if (!(await requireAdmin())) return UNAUTHORIZED;
   if (!clientId) return { error: 'Missing client id.' };

@@ -6,7 +6,8 @@ import Sidebar from '@/app/dashboard/_components/Sidebar';
 import StatusRail from '@/components/StatusRail';
 import { VALID_TRANSITIONS } from '@/utils/statusPipeline';
 import { toPipelineStatus, pillStyle } from '@/app/portal/_components/statusConfig';
-import { advanceStatus } from '../_actions/projectActions';
+import { advanceStatus, deleteProject } from '../_actions/projectActions';
+import ConfirmModal from '@/components/ConfirmModal';
 import ShipmentsTab from './ShipmentsTab';
 import InstallTasksTab from './InstallTasksTab';
 import PricingQuoteTab from './PricingQuoteTab';
@@ -34,6 +35,9 @@ export default function ProjectDetailClient({
 }) {
   const [activeTab, setActiveTab] = useState('Shipments');
   const [pending, startTransition] = useTransition();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deletePending, startDeleteTransition] = useTransition();
   const isAdmin = role === 'admin';
 
   // VALID_TRANSITIONS is keyed by pipeline labels, not raw DB values, so we must
@@ -49,6 +53,17 @@ export default function ProjectDetailClient({
 
   function handleAdvance() {
     startTransition(() => advanceStatus(project.id));
+  }
+
+  function handleDelete() {
+    setDeleteError(null);
+    startDeleteTransition(async () => {
+      // deleteProject redirects to /projects on success — the Promise will
+      // never resolve to an object in that case. A returned value here means
+      // the server action rejected (e.g. unauthorized).
+      const res = await deleteProject(project.id);
+      if (res?.error) setDeleteError(res.error);
+    });
   }
 
   return (
@@ -73,6 +88,15 @@ export default function ProjectDetailClient({
             <span className="text-[8px] leading-none">●</span>
             {statusLabel}
           </span>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="shrink-0 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+            >
+              Delete Project
+            </button>
+          )}
         </header>
 
         {/* ── Status rail card ───────────────────────────────────────────── */}
@@ -161,6 +185,22 @@ export default function ProjectDetailClient({
           )}
         </main>
       </div>
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="Delete Project?"
+          message={`Are you sure you want to delete ${project.code} — ${project.facilityName}? This will permanently remove the project and all associated shipments and install tasks. This cannot be undone.`}
+          confirmLabel="Delete Project"
+          pending={deletePending}
+          error={deleteError}
+          onConfirm={handleDelete}
+          onClose={() => {
+            if (deletePending) return;
+            setShowDeleteConfirm(false);
+            setDeleteError(null);
+          }}
+        />
+      )}
     </div>
   );
 }
