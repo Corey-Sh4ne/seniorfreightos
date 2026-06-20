@@ -10,6 +10,7 @@ const PROJECT_STATUSES = [
   'receiving',
   'staging',
   'scheduled',
+  'delivered',
   'installing',
   'complete',
   'invoiced',
