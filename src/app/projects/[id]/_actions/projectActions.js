@@ -270,6 +270,60 @@ export async function markShipmentReceived(shipmentId, received, projectId) {
 }
 
 /**
+ * Update the editable fields on a shipment. Admin only.
+ */
+export async function updateShipment(shipmentId, projectId, formData) {
+  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+
+  const vendor      = String(formData.get('vendor')      ?? '').trim();
+  const category    = String(formData.get('category')    ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  const qty         = parseInt(formData.get('qty') ?? '0', 10) || 0;
+  const weightPerUnitLbs = parseFloat(formData.get('weight_per_unit_lbs') ?? '0') || 0;
+  const cartons     = parseInt(formData.get('cartons') ?? '0', 10) || 0;
+  const etaRaw      = String(formData.get('eta') ?? '').trim();
+  const eta         = etaRaw || null;
+
+  if (!vendor)                              return { error: 'Vendor is required.' };
+  if (!SHIPMENT_CATEGORIES.includes(category)) return { error: 'Invalid category.' };
+  if (!description)                         return { error: 'Description is required.' };
+  if (qty < 1)                              return { error: 'Qty must be at least 1.' };
+  if (weightPerUnitLbs < 0)                 return { error: 'Weight cannot be negative.' };
+
+  const { rowCount } = await query(
+    `UPDATE shipments
+        SET vendor = $1, category = $2, description = $3,
+            qty = $4, weight_per_unit_lbs = $5, cartons = $6, eta = $7
+      WHERE id = $8`,
+    [vendor, category, description, qty, weightPerUnitLbs, cartons, eta, shipmentId],
+  );
+  if (!rowCount) return { error: 'Shipment not found.' };
+
+  revalidatePath('/projects');
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/ops');
+  return { ok: true };
+}
+
+/**
+ * Permanently delete a shipment. Admin only.
+ */
+export async function deleteShipment(shipmentId, projectId) {
+  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+
+  const { rowCount } = await query(
+    'DELETE FROM shipments WHERE id = $1',
+    [shipmentId],
+  );
+  if (!rowCount) return { error: 'Shipment not found.' };
+
+  revalidatePath('/projects');
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/ops');
+  return { ok: true };
+}
+
+/**
  * Toggle the completed flag on an install task.
  */
 export async function toggleInstallTask(taskId, completed, projectId) {
@@ -278,4 +332,49 @@ export async function toggleInstallTask(taskId, completed, projectId) {
     [completed, taskId],
   );
   revalidatePath(`/projects/${projectId}`);
+}
+
+/**
+ * Update the editable fields on an install task. Admin only.
+ */
+export async function updateInstallTask(taskId, projectId, formData) {
+  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+
+  const type  = String(formData.get('type')  ?? '').trim();
+  const qty   = parseInt(formData.get('qty') ?? '0', 10) || 0;
+  const notes = String(formData.get('notes') ?? '').trim();
+
+  if (!INSTALL_TASK_TYPES.includes(type)) return { error: 'Invalid task type.' };
+  if (qty < 1)                            return { error: 'Qty must be at least 1.' };
+
+  const { rowCount } = await query(
+    `UPDATE install_tasks
+        SET type = $1, qty = $2, notes = $3
+      WHERE id = $4`,
+    [type, qty, notes, taskId],
+  );
+  if (!rowCount) return { error: 'Install task not found.' };
+
+  revalidatePath('/projects');
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/ops');
+  return { ok: true };
+}
+
+/**
+ * Permanently delete an install task. Admin only.
+ */
+export async function deleteInstallTask(taskId, projectId) {
+  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+
+  const { rowCount } = await query(
+    'DELETE FROM install_tasks WHERE id = $1',
+    [taskId],
+  );
+  if (!rowCount) return { error: 'Install task not found.' };
+
+  revalidatePath('/projects');
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath('/ops');
+  return { ok: true };
 }

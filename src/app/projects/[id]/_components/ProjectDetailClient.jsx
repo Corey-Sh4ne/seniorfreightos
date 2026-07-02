@@ -149,10 +149,18 @@ export default function ProjectDetailClient({
         {/* ── Tab content ────────────────────────────────────────────────── */}
         <main className="flex-1 overflow-y-auto p-4">
           {activeTab === 'Shipments' && (
-            <ShipmentsTab shipments={shipments} projectId={project.id} />
+            <ShipmentsTab
+              shipments={shipments}
+              projectId={project.id}
+              projectStatus={project.status}
+            />
           )}
           {activeTab === 'Install Tasks' && (
-            <InstallTasksTab installTasks={installTasks} projectId={project.id} />
+            <InstallTasksTab
+              installTasks={installTasks}
+              projectId={project.id}
+              projectStatus={project.status}
+            />
           )}
           {activeTab === 'Pricing Quote' && isAdmin && (
             <PricingQuoteTab

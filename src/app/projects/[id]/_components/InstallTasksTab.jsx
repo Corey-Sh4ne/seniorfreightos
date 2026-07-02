@@ -2,7 +2,13 @@
 
 import { useState, useTransition } from 'react';
 import Modal from '@/app/rate-card/_components/Modal';
-import { addInstallTask, toggleInstallTask } from '../_actions/projectActions';
+import ConfirmModal from '@/components/ConfirmModal';
+import {
+  addInstallTask,
+  toggleInstallTask,
+  updateInstallTask,
+  deleteInstallTask,
+} from '../_actions/projectActions';
 
 const TYPE_LABELS = {
   assemble:     'Assemble furniture',
@@ -14,6 +20,13 @@ const TYPE_LABELS = {
 };
 
 const TASK_TYPES = Object.keys(TYPE_LABELS);
+
+// Install tasks are editable up until the install phase begins — after that,
+// the checklist reflects work in progress and must not be altered.
+const EDITABLE_STATUSES = new Set([
+  'prospect', 'quoted', 'denied', 'awarded',
+  'receiving', 'staging', 'scheduled', 'delivered',
+]);
 
 const INPUT_CLS =
   'block w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 ' +
@@ -31,7 +44,8 @@ function Field({ label, required, children }) {
   );
 }
 
-function AddInstallTaskModal({ projectId, onClose }) {
+function InstallTaskModal({ projectId, task, onClose }) {
+  const isEdit = Boolean(task);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState(null);
 
@@ -40,14 +54,21 @@ function AddInstallTaskModal({ projectId, onClose }) {
     setError(null);
     const fd = new FormData(e.currentTarget);
     startTransition(async () => {
-      const res = await addInstallTask(projectId, fd);
+      const res = isEdit
+        ? await updateInstallTask(task.id, projectId, fd)
+        : await addInstallTask(projectId, fd);
       if (res?.error) setError(res.error);
       else onClose();
     });
   }
 
   return (
-    <Modal title="Add Install Task" subtitle="Add a task to the install checklist" onClose={onClose} maxWidth="max-w-md">
+    <Modal
+      title={isEdit ? 'Edit Install Task' : 'Add Install Task'}
+      subtitle={isEdit ? 'Update this install task' : 'Add a task to the install checklist'}
+      onClose={onClose}
+      maxWidth="max-w-md"
+    >
       <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -56,7 +77,11 @@ function AddInstallTaskModal({ projectId, onClose }) {
         )}
 
         <Field label="Type" required>
-          <select name="type" defaultValue={TASK_TYPES[0]} className={INPUT_CLS}>
+          <select
+            name="type"
+            defaultValue={task?.type ?? TASK_TYPES[0]}
+            className={INPUT_CLS}
+          >
             {TASK_TYPES.map((t) => (
               <option key={t} value={t}>{TYPE_LABELS[t]}</option>
             ))}
@@ -64,11 +89,24 @@ function AddInstallTaskModal({ projectId, onClose }) {
         </Field>
 
         <Field label="Qty" required>
-          <input name="qty" type="number" min="1" defaultValue="1" required className={INPUT_CLS} />
+          <input
+            name="qty"
+            type="number"
+            min="1"
+            required
+            defaultValue={task?.qty ?? 1}
+            className={INPUT_CLS}
+          />
         </Field>
 
         <Field label="Notes">
-          <input name="notes" type="text" placeholder="Optional notes" className={INPUT_CLS} />
+          <input
+            name="notes"
+            type="text"
+            placeholder="Optional notes"
+            defaultValue={task?.notes ?? ''}
+            className={INPUT_CLS}
+          />
         </Field>
 
         <div className="flex items-center justify-end gap-3 border-t border-zinc-200 pt-5">
@@ -84,7 +122,7 @@ function AddInstallTaskModal({ projectId, onClose }) {
             disabled={pending}
             className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50"
           >
-            {pending ? 'Saving…' : 'Save Task'}
+            {pending ? 'Saving…' : isEdit ? 'Save Changes' : 'Save Task'}
           </button>
         </div>
       </form>
@@ -92,14 +130,34 @@ function AddInstallTaskModal({ projectId, onClose }) {
   );
 }
 
-export default function InstallTasksTab({ installTasks, projectId }) {
+export default function InstallTasksTab({ installTasks, projectId, projectStatus }) {
   const [pending, startTransition] = useTransition();
   const [showAdd, setShowAdd] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [deletingTask, setDeletingTask] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deletePending, startDeleteTransition] = useTransition();
   const completedCount = installTasks.filter((t) => t.completed).length;
+
+  const canEdit = EDITABLE_STATUSES.has(projectStatus);
 
   function handleToggle(taskId, completed) {
     startTransition(() => toggleInstallTask(taskId, !completed, projectId));
   }
+
+  function handleDelete() {
+    if (!deletingTask) return;
+    setDeleteError(null);
+    startDeleteTransition(async () => {
+      const res = await deleteInstallTask(deletingTask.id, projectId);
+      if (res?.error) setDeleteError(res.error);
+      else setDeletingTask(null);
+    });
+  }
+
+  const deleteTaskLabel = deletingTask
+    ? (TYPE_LABELS[deletingTask.type] ?? deletingTask.type)
+    : '';
 
   return (
     <div className="bg-white rounded-lg border border-zinc-200 overflow-hidden">
@@ -152,13 +210,55 @@ export default function InstallTasksTab({ installTasks, projectId }) {
                   <span className="block text-xs text-zinc-400 mt-0.5">{task.notes}</span>
                 )}
               </label>
+              {canEdit && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setEditingTask(task)}
+                    className="rounded-md border border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-white"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingTask(task)}
+                    className="rounded-md border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       )}
 
       {showAdd && (
-        <AddInstallTaskModal projectId={projectId} onClose={() => setShowAdd(false)} />
+        <InstallTaskModal projectId={projectId} onClose={() => setShowAdd(false)} />
+      )}
+
+      {editingTask && (
+        <InstallTaskModal
+          projectId={projectId}
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+        />
+      )}
+
+      {deletingTask && (
+        <ConfirmModal
+          title="Delete Install Task?"
+          message={`Are you sure you want to delete the "${deleteTaskLabel}" task? This cannot be undone.`}
+          confirmLabel="Delete"
+          pending={deletePending}
+          error={deleteError}
+          onConfirm={handleDelete}
+          onClose={() => {
+            if (deletePending) return;
+            setDeletingTask(null);
+            setDeleteError(null);
+          }}
+        />
       )}
     </div>
   );
