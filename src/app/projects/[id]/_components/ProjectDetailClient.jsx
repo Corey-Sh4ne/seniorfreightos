@@ -12,6 +12,7 @@ import ShipmentsTab from './ShipmentsTab';
 import InstallTasksTab from './InstallTasksTab';
 import PricingQuoteTab from './PricingQuoteTab';
 import ActivityLogTab from './ActivityLogTab';
+import NotesTab from './NotesTab';
 
 const DATE_FMT = new Intl.DateTimeFormat('en-US', {
   month: 'short', day: 'numeric', timeZone: 'UTC',
@@ -176,12 +177,7 @@ export default function ProjectDetailClient({
             />
           )}
           {activeTab === 'Notes' && (
-            <div className="bg-white rounded-lg border border-zinc-200 p-5 max-w-2xl">
-              <h3 className="text-sm font-semibold text-zinc-700 mb-3">Notes — Admin only</h3>
-              <p className="text-sm text-zinc-600 whitespace-pre-wrap leading-relaxed">
-                {project.notes || 'No notes recorded.'}
-              </p>
-            </div>
+            <NotesTab notes={project.notes} stageNotes={project.stageNotes} />
           )}
           {activeTab === 'History' && isAdmin && (
             <ActivityLogTab entries={activityLog} />

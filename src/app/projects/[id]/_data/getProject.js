@@ -9,8 +9,8 @@ export async function getProjectById(id) {
   const { rows } = await query(
     `SELECT id, code, client_name, facility_name, facility_address,
             contact_name, contact_email, miles_from_hub, status,
-            storage_days, rush_delivery, rates, notes, created_at,
-            updated_at, quoted_price, accepted_at
+            storage_days, rush_delivery, rates, notes, stage_notes,
+            created_at, updated_at, quoted_price, accepted_at
      FROM projects WHERE id = $1`,
     [id],
   );
@@ -30,6 +30,7 @@ export async function getProjectById(id) {
     rushDelivery:    r.rush_delivery,
     rates:           r.rates ?? {},
     notes:           r.notes ?? '',
+    stageNotes:      r.stage_notes ?? {},
     createdAt:       r.created_at,
     updatedAt:       r.updated_at,
     quotedPrice:     r.quoted_price ?? null,

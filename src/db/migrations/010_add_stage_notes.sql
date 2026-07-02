@@ -1,0 +1,2 @@
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS stage_notes jsonb
+NOT NULL DEFAULT '{}';

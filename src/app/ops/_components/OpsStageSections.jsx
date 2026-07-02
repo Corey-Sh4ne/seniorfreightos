@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   confirmStartReceiving,
   confirmReceiving,
@@ -9,6 +10,7 @@ import {
   confirmInstallComplete,
 } from '../_actions/opsActions';
 import { ShipmentRow, TaskRow } from './OpsChecklistRows';
+import StageConfirmModal from './StageConfirmModal';
 
 const PRIMARY_BTN =
   'rounded-md bg-zinc-900 px-3.5 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50';
@@ -28,6 +30,47 @@ export function ActionButton({ label, prompt, onAction, pending, run, className 
     >
       {label}
     </button>
+  );
+}
+
+/**
+ * Button that opens a StageConfirmModal. On confirm, invokes `action(projectId, note)`
+ * inside the caller's transition and closes the modal.
+ */
+function StageConfirmButton({
+  label, className = CONFIRM_BTN, projectId, action,
+  modalTitle, modalMessage, notePlaceholder, confirmLabel,
+  pending, run,
+}) {
+  const [open, setOpen] = useState(false);
+
+  function handleConfirm(note) {
+    setOpen(false);
+    run(() => action(projectId, note));
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => setOpen(true)}
+        className={className}
+      >
+        {label}
+      </button>
+      {open && (
+        <StageConfirmModal
+          title={modalTitle}
+          message={modalMessage}
+          placeholder={notePlaceholder}
+          confirmLabel={confirmLabel ?? label}
+          pending={pending}
+          onConfirm={handleConfirm}
+          onClose={() => { if (!pending) setOpen(false); }}
+        />
+      )}
+    </>
   );
 }
 
@@ -64,7 +107,9 @@ const CHECKLIST_STAGES = {
     ready: (f) => f.allReceived,
     footer: 'All shipments are checked in.',
     label: 'Confirm All Received',
-    confirm: 'Mark all shipments received and advance to Consolidating? This cannot be undone.',
+    modalTitle: 'Confirm All Shipments Received',
+    modalMessage: 'Mark all shipments received and advance to Consolidating? This cannot be undone.',
+    notePlaceholder: 'e.g. 2 of 3 shipments received, final truck delayed...',
     action: confirmReceiving,
   },
   installing: {
@@ -75,7 +120,9 @@ const CHECKLIST_STAGES = {
     ready: (f) => f.allComplete,
     footer: 'All installation tasks are checked off.',
     label: 'Confirm Installation Complete',
-    confirm: 'Confirm all installation tasks complete? This cannot be undone.',
+    modalTitle: 'Confirm Installation Complete',
+    modalMessage: 'Confirm all installation tasks complete? This cannot be undone.',
+    notePlaceholder: 'e.g. Install crew wrapped, punch list attached...',
     action: confirmInstallComplete,
   },
 };
@@ -85,17 +132,25 @@ const SIMPLE_STAGES = {
   staging: {
     title: 'Consolidating', footer: 'Freight consolidated and ready for delivery?',
     label: 'Confirm Ready for Delivery',
-    confirm: 'Confirm freight is consolidated and ready for delivery? This cannot be undone.',
+    modalTitle: 'Confirm Ready for Delivery',
+    modalMessage: 'Confirm freight is consolidated and ready for delivery? This cannot be undone.',
+    notePlaceholder: 'e.g. All freight consolidated, ready to ship...',
     action: confirmConsolidated,
   },
   scheduled: {
     title: 'Out for Delivery', footer: 'Confirm truck has departed for delivery?',
-    label: 'Confirm Departed', confirm: 'Confirm truck has departed? This cannot be undone.',
+    label: 'Confirm Departed',
+    modalTitle: 'Confirm Truck Departed',
+    modalMessage: 'Confirm truck has departed? This cannot be undone.',
+    notePlaceholder: 'e.g. Truck left the yard at 7:15am, ETA 10:00am...',
     action: confirmDeparted,
   },
   delivered: {
     title: 'Confirm Delivery', footer: 'Confirm delivery at facility?',
-    label: 'Confirm Delivered', confirm: 'Confirm delivery at facility? This cannot be undone.',
+    label: 'Confirm Delivered',
+    modalTitle: 'Confirm Delivery at Facility',
+    modalMessage: 'Confirm delivery at facility? This cannot be undone.',
+    notePlaceholder: 'e.g. Delivered to loading dock, facilities manager signed off...',
     action: confirmDelivered,
   },
 };
@@ -142,10 +197,14 @@ export function ActiveContent({ project, pending, run, allReceived, allComplete 
         )}
         {list.ready({ allReceived, allComplete }) && (
           <SectionFooter prompt={list.footer}>
-            <ActionButton
+            <StageConfirmButton
               label={list.label}
-              prompt={list.confirm}
-              onAction={() => list.action(id)}
+              projectId={id}
+              action={list.action}
+              modalTitle={list.modalTitle}
+              modalMessage={list.modalMessage}
+              notePlaceholder={list.notePlaceholder}
+              confirmLabel={list.label}
               pending={pending}
               run={run}
             />
@@ -160,10 +219,14 @@ export function ActiveContent({ project, pending, run, allReceived, allComplete 
     return (
       <ActiveSection title={simple.title}>
         <SectionFooter prompt={simple.footer}>
-          <ActionButton
+          <StageConfirmButton
             label={simple.label}
-            prompt={simple.confirm}
-            onAction={() => simple.action(id)}
+            projectId={id}
+            action={simple.action}
+            modalTitle={simple.modalTitle}
+            modalMessage={simple.modalMessage}
+            notePlaceholder={simple.notePlaceholder}
+            confirmLabel={simple.label}
             pending={pending}
             run={run}
           />

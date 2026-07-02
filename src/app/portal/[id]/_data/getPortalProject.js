@@ -17,7 +17,7 @@ export async function getPortalProjectById(id, clientName) {
         `SELECT id, code, client_name, facility_name, facility_address,
                 contact_name, contact_email, status,
                 storage_days, rush_delivery, created_at,
-                quoted_price, accepted_at
+                quoted_price, accepted_at, stage_notes
            FROM projects
           WHERE id = $1 AND client_name = $2`,
         [id, clientName],
@@ -26,7 +26,7 @@ export async function getPortalProjectById(id, clientName) {
         `SELECT id, code, client_name, facility_name, facility_address,
                 contact_name, contact_email, status,
                 storage_days, rush_delivery, created_at,
-                quoted_price, accepted_at
+                quoted_price, accepted_at, stage_notes
            FROM projects
           WHERE id = $1`,
         [id],
@@ -47,6 +47,7 @@ export async function getPortalProjectById(id, clientName) {
     createdAt:       r.created_at,
     quotedPrice:     r.quoted_price ?? null,
     acceptedAt:      r.accepted_at ?? null,
+    stageNotes:      r.stage_notes ?? {},
   };
 }
 

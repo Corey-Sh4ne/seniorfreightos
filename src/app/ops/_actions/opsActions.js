@@ -31,10 +31,18 @@ async function setStatus(projectId, status) {
  * transition can never fire out of order or be replayed. `expected` may be a
  * single status or a list of acceptable statuses. When `shipments` / `tasks` is
  * a boolean, every shipment / install task is set to that value — used to lock a
- * checklist on confirm (true) or reopen it on reset (false). Returns a standard
- * action result.
+ * checklist on confirm (true) or reopen it on reset (false).
+ *
+ * When both `noteKey` and a non-empty `note` are provided, the note is merged
+ * into the project's stage_notes JSONB column and a follow-up activity_log
+ * entry is written. Returns a standard action result.
  */
-async function transitionStage(projectId, expected, next, { shipments, tasks, logAction } = {}) {
+async function transitionStage(
+  projectId,
+  expected,
+  next,
+  { shipments, tasks, logAction, noteKey, note } = {},
+) {
   const access = await requireOpsRole();
   if (!access.ok) return DENIED;
 
@@ -53,8 +61,25 @@ async function transitionStage(projectId, expected, next, { shipments, tasks, lo
 
   await setStatus(projectId, next);
 
+  const trimmedNote = typeof note === 'string' ? note.trim() : '';
+  if (noteKey && trimmedNote) {
+    await query(
+      'UPDATE projects SET stage_notes = stage_notes || $1::jsonb WHERE id = $2',
+      [JSON.stringify({ [noteKey]: trimmedNote }), projectId],
+    );
+  }
+
   if (logAction) {
     await logActivity(projectId, access.actor.name, access.actor.role, logAction, null);
+  }
+  if (noteKey && trimmedNote) {
+    await logActivity(
+      projectId,
+      access.actor.name,
+      access.actor.role,
+      `Note added at ${noteKey}`,
+      trimmedNote,
+    );
   }
 
   revalidateBoards();
@@ -122,31 +147,39 @@ export async function confirmStartReceiving(projectId) {
  * Confirm all shipments received: mark every shipment received and advance
  * 'receiving' -> 'staging' (Consolidating).
  */
-export async function confirmReceiving(projectId) {
+export async function confirmReceiving(projectId, note) {
   return transitionStage(projectId, 'receiving', 'staging', {
     shipments: true,
     logAction: 'All shipments confirmed received',
+    noteKey: 'receiving',
+    note,
   });
 }
 
 /** Confirm freight consolidated: advance 'staging' -> 'scheduled' (Out for Delivery). */
-export async function confirmConsolidated(projectId) {
+export async function confirmConsolidated(projectId, note) {
   return transitionStage(projectId, 'staging', 'scheduled', {
     logAction: 'Freight consolidated and ready',
+    noteKey: 'consolidating',
+    note,
   });
 }
 
 /** Confirm the truck has departed: advance 'scheduled' -> 'delivered'. */
-export async function confirmDeparted(projectId) {
+export async function confirmDeparted(projectId, note) {
   return transitionStage(projectId, 'scheduled', 'delivered', {
     logAction: 'Truck departed for delivery',
+    noteKey: 'departed',
+    note,
   });
 }
 
 /** Confirm delivery at the facility: advance 'delivered' -> 'installing'. */
-export async function confirmDelivered(projectId) {
+export async function confirmDelivered(projectId, note) {
   return transitionStage(projectId, 'delivered', 'installing', {
     logAction: 'Delivery confirmed at facility',
+    noteKey: 'delivered',
+    note,
   });
 }
 
@@ -154,10 +187,12 @@ export async function confirmDelivered(projectId) {
  * Confirm installation complete: mark every install task complete and advance
  * 'installing' -> 'complete'.
  */
-export async function confirmInstallComplete(projectId) {
+export async function confirmInstallComplete(projectId, note) {
   return transitionStage(projectId, 'installing', 'complete', {
     tasks: true,
     logAction: 'Installation complete',
+    noteKey: 'installing',
+    note,
   });
 }
 

@@ -13,6 +13,7 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import ProjectHero from './_components/ProjectHero';
 import PortalDetailTabs from './_components/PortalDetailTabs';
+import StageNotes from './_components/StageNotes';
 import { parseClientName } from '@/app/dashboard/_lib/viewAsOptions';
 import {
   getPortalProjectById,
@@ -91,6 +92,8 @@ export default async function PortalProjectPage({ params }) {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <ProjectHero project={project} clientName={clientName} />
+
+        <StageNotes stageNotes={project.stageNotes} />
 
         <section className="bg-white rounded-xl border border-zinc-200 p-5 sm:p-6 shadow-sm">
           <PortalDetailTabs shipments={shipments} installTasks={installTasks} />
