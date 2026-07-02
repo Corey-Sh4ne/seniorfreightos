@@ -8,10 +8,12 @@
 export const dynamic = 'force-dynamic';
 
 import { auth, clerkClient } from '@clerk/nextjs/server';
+import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import ProjectHero from './_components/ProjectHero';
 import PortalDetailTabs from './_components/PortalDetailTabs';
+import { parseClientName } from '@/app/dashboard/_lib/viewAsOptions';
 import {
   getPortalProjectById,
   getPortalProjectShipments,
@@ -32,13 +34,20 @@ export default async function PortalProjectPage({ params }) {
   const clientName = user.publicMetadata?.clientName ?? null;
   const isAdmin = role === 'admin';
 
+  // Honor the admin "View As Client — <Name>" cookie so the back link returns
+  // to the dashboard impersonation shell rather than bouncing out of it.
+  const cookieStore = await cookies();
+  const rawViewAs = isAdmin ? (cookieStore.get('viewAs')?.value ?? '') : '';
+  const impersonatedClientName = parseClientName(rawViewAs);
+  const returnTo = impersonatedClientName ? '/dashboard' : '/portal';
+
   // Admins can view any project; client users are scoped to their own
   // organization, so the lookup is filtered by client_name.
   const project = await getPortalProjectById(id, isAdmin ? null : clientName);
   if (!project) {
     // A client user requesting a project that isn't theirs gets sent back to
     // their portal rather than leaking the project's existence via a 404.
-    if (!isAdmin) redirect('/portal');
+    if (!isAdmin) redirect(returnTo);
     notFound();
   }
 
@@ -47,7 +56,7 @@ export default async function PortalProjectPage({ params }) {
   if (project.status === 'quoted' || project.status === 'denied') {
     redirect(`/portal/quotes/${project.id}`);
   }
-  if (project.status === 'prospect') redirect('/portal');
+  if (project.status === 'prospect') redirect(returnTo);
 
   const [shipments, installTasks] = await Promise.all([
     getPortalProjectShipments(project.id),
@@ -72,7 +81,7 @@ export default async function PortalProjectPage({ params }) {
             </div>
           </div>
           <Link
-            href="/portal"
+            href={returnTo}
             className="text-sm font-medium text-zinc-500 hover:text-blue-600 transition-colors"
           >
             ← My Projects
