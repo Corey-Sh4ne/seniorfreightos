@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { FileText, Clock, DollarSign, Lock } from 'lucide-react';
 import Sidebar from '@/app/dashboard/_components/Sidebar';
 import StatusRail from '@/components/StatusRail';
 import { toPipelineStatus, pillStyle } from '@/app/portal/_components/statusConfig';
@@ -30,6 +31,11 @@ function StatCard({ label, value, danger }) {
 
 const ALL_TABS = ['Shipments', 'Install Tasks', 'Pricing Quote', 'Notes', 'History'];
 const ADMIN_ONLY_TABS = new Set(['Pricing Quote', 'History']);
+const TAB_ICONS = {
+  'Pricing Quote': DollarSign,
+  Notes: FileText,
+  History: Clock,
+};
 
 export default function ProjectDetailClient({
   project, shipments, installTasks, role,
@@ -95,7 +101,7 @@ export default function ProjectDetailClient({
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="shrink-0 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+                className="shrink-0 text-sm text-gray-400 hover:text-red-500 transition-colors"
               >
                 Delete Project
               </button>
@@ -130,20 +136,28 @@ export default function ProjectDetailClient({
 
         {/* ── Tab bar ────────────────────────────────────────────────────── */}
         <div className="bg-white border-b border-zinc-200 px-4 flex shrink-0">
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={[
-                'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
-                activeTab === tab
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-900',
-              ].join(' ')}
-            >
-              {ADMIN_ONLY_TABS.has(tab) ? `🔒 ${tab}` : tab}
-            </button>
-          ))}
+          {visibleTabs.map((tab) => {
+            const Icon = TAB_ICONS[tab];
+            const locked = ADMIN_ONLY_TABS.has(tab);
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={[
+                  'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                  activeTab === tab
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-zinc-500 hover:text-zinc-900',
+                ].join(' ')}
+              >
+                <span className="flex items-center gap-1.5">
+                  {locked && <Lock size={14} />}
+                  {Icon && <Icon size={14} />}
+                  {tab}
+                </span>
+              </button>
+            );
+          })}
           {!isAdmin && (
             <span className="ml-auto flex items-center text-xs text-amber-600 font-medium pr-1">
               Admin-only tab hidden

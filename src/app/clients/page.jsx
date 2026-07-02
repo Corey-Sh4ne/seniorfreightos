@@ -79,17 +79,15 @@ export default async function ClientsPage() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto px-6 py-6">
-          <div className="mx-auto max-w-5xl">
-            <ClientsClient
-              clients={clientsRes.rows.map(mapClientRow)}
-              rateCards={rateCardsRes.rows.map((r) => ({
-                id: r.id,
-                name: r.name,
-                isDefault: r.is_default,
-              }))}
-              clerkUsers={clerkUsers}
-            />
-          </div>
+          <ClientsClient
+            clients={clientsRes.rows.map(mapClientRow)}
+            rateCards={rateCardsRes.rows.map((r) => ({
+              id: r.id,
+              name: r.name,
+              isDefault: r.is_default,
+            }))}
+            clerkUsers={clerkUsers}
+          />
         </main>
       </div>
     </div>

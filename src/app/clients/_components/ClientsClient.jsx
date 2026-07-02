@@ -3,6 +3,9 @@
 import { useMemo, useState } from 'react';
 import ClientFormModal from './ClientFormModal';
 
+const AVATAR_BG = ['#EFF6FF', '#FDF4FF', '#ECFDF5'];
+const AVATAR_FG = ['#1D4ED8', '#7E22CE', '#065F46'];
+
 function LinkBadge({ linked }) {
   return linked ? (
     <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
@@ -65,9 +68,22 @@ export default function ClientsClient({ clients, rateCards, clerkUsers }) {
                   </td>
                 </tr>
               ) : (
-                clients.map((client) => (
+                clients.map((client, idx) => (
                   <tr key={client.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors duration-100">
-                    <td className="px-4 py-3 font-semibold text-zinc-900 whitespace-nowrap">{client.name}</td>
+                    <td className="px-4 py-3 font-semibold text-zinc-900 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center shrink-0"
+                          style={{
+                            backgroundColor: AVATAR_BG[idx % AVATAR_BG.length],
+                            color: AVATAR_FG[idx % AVATAR_FG.length],
+                          }}
+                        >
+                          {client.name?.charAt(0).toUpperCase() || '?'}
+                        </span>
+                        {client.name}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-zinc-600">
                       <div>{client.contactName || '—'}</div>
                       {client.contactEmail && (
