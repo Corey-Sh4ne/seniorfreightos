@@ -226,8 +226,9 @@ export async function resetToInstalling(projectId) {
 }
 
 /**
- * Full reset: clear all shipment + task progress and return the project to
- * 'awarded' so a dispatcher can walk through the entire ops flow from the start.
+ * Full reset: clear all shipment + task progress, wipe the quote and invoice
+ * data, and return the project to 'prospect' so the entire demo flow can be
+ * walked again from the very beginning.
  */
 export async function resetProject(projectId) {
   const access = await requireOpsRole();
@@ -235,8 +236,22 @@ export async function resetProject(projectId) {
 
   await query('UPDATE shipments SET received = FALSE WHERE project_id = $1', [projectId]);
   await query('UPDATE install_tasks SET completed = FALSE WHERE project_id = $1', [projectId]);
-  await setStatus(projectId, 'awarded');
+  await query(
+    `UPDATE projects
+        SET status = 'prospect',
+            quoted_price = NULL,
+            invoice_number = NULL,
+            invoice_generated_at = NULL,
+            invoice_status = NULL,
+            accepted_at = NULL,
+            stage_notes = '{}'::jsonb,
+            updated_at = NOW()
+      WHERE id = $1`,
+    [projectId],
+  );
+
+  await logActivity(projectId, access.actor.name, access.actor.role, 'Project reset for demo', null);
 
   revalidateBoards();
-  return { ok: true, status: 'awarded' };
+  return { ok: true, status: 'prospect' };
 }

@@ -63,7 +63,7 @@ export default function OpsProjectCard({ project, completed = false }) {
             type="button"
             disabled={pending}
             onClick={() => {
-              if (window.confirm('Reset this project to the very start? This clears all shipment and install progress.')) {
+              if (window.confirm('Reset this project to prospect? This will clear all progress, the accepted quote, and invoice data so the full demo can be run again.')) {
                 run(() => resetProject(project.id));
               }
             }}
