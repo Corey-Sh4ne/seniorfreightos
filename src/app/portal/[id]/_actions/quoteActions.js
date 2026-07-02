@@ -1,7 +1,29 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { query } from '@/db/index';
+import { logActivity } from '@/utils/activityLogger';
+
+/**
+ * Fetch the current caller's display name + role from Clerk for activity_log
+ * attribution. Returns null when signed out. Never throws.
+ */
+async function getActor() {
+  try {
+    const { userId } = await auth();
+    if (!userId) return null;
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const first = user.firstName ?? '';
+    const last = user.lastName ?? '';
+    const full = `${first} ${last}`.trim();
+    const name = full || user.emailAddresses?.[0]?.emailAddress || 'Unknown';
+    return { name, role: user.publicMetadata?.role ?? 'unknown' };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Verify the project belongs to the given client and is in a state where the
@@ -39,6 +61,11 @@ export async function acceptQuote(projectId, clientName) {
     [projectId, clientName],
   );
 
+  const actor = await getActor();
+  if (actor) {
+    await logActivity(projectId, actor.name, actor.role, 'Quote accepted by client', null);
+  }
+
   revalidatePath('/portal');
   revalidatePath('/dashboard');
   revalidatePath('/projects');
@@ -59,6 +86,11 @@ export async function denyQuote(projectId, clientName) {
       WHERE id = $1 AND client_name = $2`,
     [projectId, clientName],
   );
+
+  const actor = await getActor();
+  if (actor) {
+    await logActivity(projectId, actor.name, actor.role, 'Quote denied by client', null);
+  }
 
   revalidatePath('/portal');
   revalidatePath('/dashboard');

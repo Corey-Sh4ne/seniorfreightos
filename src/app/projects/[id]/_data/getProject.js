@@ -91,6 +91,28 @@ export async function getRateCardsForQuote(clientName) {
 }
 
 /**
+ * Fetch the activity_log entries for a project, newest first.
+ * Returns an array of camelCased rows suitable for the History tab.
+ */
+export async function getActivityLogByProjectId(projectId) {
+  const { rows } = await query(
+    `SELECT id, actor_name, actor_role, action, detail, created_at
+     FROM activity_log
+     WHERE project_id = $1
+     ORDER BY created_at DESC`,
+    [projectId],
+  );
+  return rows.map((r) => ({
+    id:        r.id,
+    actorName: r.actor_name,
+    actorRole: r.actor_role,
+    action:    r.action,
+    detail:    r.detail ?? null,
+    createdAt: r.created_at,
+  }));
+}
+
+/**
  * Fetch all install tasks for a project, ordered by type.
  */
 export async function getInstallTasksByProjectId(projectId) {

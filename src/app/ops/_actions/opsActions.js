@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { query } from '@/db/index';
 import { requireOpsRole } from '../_lib/auth';
+import { logActivity } from '@/utils/activityLogger';
 
 const DENIED = { error: 'You do not have permission to perform this action.' };
 
@@ -33,7 +34,7 @@ async function setStatus(projectId, status) {
  * checklist on confirm (true) or reopen it on reset (false). Returns a standard
  * action result.
  */
-async function transitionStage(projectId, expected, next, { shipments, tasks } = {}) {
+async function transitionStage(projectId, expected, next, { shipments, tasks, logAction } = {}) {
   const access = await requireOpsRole();
   if (!access.ok) return DENIED;
 
@@ -51,6 +52,11 @@ async function transitionStage(projectId, expected, next, { shipments, tasks } =
   }
 
   await setStatus(projectId, next);
+
+  if (logAction) {
+    await logActivity(projectId, access.actor.name, access.actor.role, logAction, null);
+  }
+
   revalidateBoards();
   return { ok: true, status: next };
 }
@@ -107,7 +113,9 @@ export async function markInstallTaskComplete(taskId, projectId, completed) {
 
 /** Begin the receiving workflow: advance 'awarded' -> 'receiving'. */
 export async function confirmStartReceiving(projectId) {
-  return transitionStage(projectId, 'awarded', 'receiving');
+  return transitionStage(projectId, 'awarded', 'receiving', {
+    logAction: 'Receiving started',
+  });
 }
 
 /**
@@ -115,22 +123,31 @@ export async function confirmStartReceiving(projectId) {
  * 'receiving' -> 'staging' (Consolidating).
  */
 export async function confirmReceiving(projectId) {
-  return transitionStage(projectId, 'receiving', 'staging', { shipments: true });
+  return transitionStage(projectId, 'receiving', 'staging', {
+    shipments: true,
+    logAction: 'All shipments confirmed received',
+  });
 }
 
 /** Confirm freight consolidated: advance 'staging' -> 'scheduled' (Out for Delivery). */
 export async function confirmConsolidated(projectId) {
-  return transitionStage(projectId, 'staging', 'scheduled');
+  return transitionStage(projectId, 'staging', 'scheduled', {
+    logAction: 'Freight consolidated and ready',
+  });
 }
 
 /** Confirm the truck has departed: advance 'scheduled' -> 'delivered'. */
 export async function confirmDeparted(projectId) {
-  return transitionStage(projectId, 'scheduled', 'delivered');
+  return transitionStage(projectId, 'scheduled', 'delivered', {
+    logAction: 'Truck departed for delivery',
+  });
 }
 
 /** Confirm delivery at the facility: advance 'delivered' -> 'installing'. */
 export async function confirmDelivered(projectId) {
-  return transitionStage(projectId, 'delivered', 'installing');
+  return transitionStage(projectId, 'delivered', 'installing', {
+    logAction: 'Delivery confirmed at facility',
+  });
 }
 
 /**
@@ -138,7 +155,10 @@ export async function confirmDelivered(projectId) {
  * 'installing' -> 'complete'.
  */
 export async function confirmInstallComplete(projectId) {
-  return transitionStage(projectId, 'installing', 'complete', { tasks: true });
+  return transitionStage(projectId, 'installing', 'complete', {
+    tasks: true,
+    logAction: 'Installation complete',
+  });
 }
 
 /* -------------------------------------------------------------------------- */

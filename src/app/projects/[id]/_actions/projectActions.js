@@ -13,14 +13,25 @@ import {
 } from '../_data/getProject';
 import { computePricingWithRates, buildFullQuoteBreakdown } from '@/utils/quote';
 import { rowToRateCard } from '@/app/rate-card/_lib/rateCardFields';
+import { logActivity } from '@/utils/activityLogger';
 
-/** True when the caller is an authenticated admin. */
-async function isAdmin() {
+/**
+ * Admin gate that also returns the acting user's display name + role so callers
+ * can attribute activity_log entries without re-fetching from Clerk.
+ * Returns { error } on failure, { actor: { name, role } } on success.
+ */
+async function getAdminActor() {
   const { userId } = await auth();
-  if (!userId) return false;
+  if (!userId) return { error: 'Unauthorized. Admin role required.' };
   const client = await clerkClient();
   const user = await client.users.getUser(userId);
-  return user.publicMetadata?.role === 'admin';
+  const role = user.publicMetadata?.role;
+  if (role !== 'admin') return { error: 'Unauthorized. Admin role required.' };
+  const first = user.firstName ?? '';
+  const last = user.lastName ?? '';
+  const full = `${first} ${last}`.trim();
+  const name = full || user.emailAddresses?.[0]?.emailAddress || 'Unknown';
+  return { actor: { name, role } };
 }
 
 /**
@@ -72,7 +83,8 @@ async function persistQuote(projectId, rateCardId, rates, breakdown) {
  * Snapshots the chosen rate card + itemized breakdown onto the project.
  */
 export async function sendQuote(projectId, rateCardId, _quoteBreakdown) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
   const result = await recomputeWithRateCard(projectId, rateCardId);
   if (result.error) return result;
@@ -81,6 +93,7 @@ export async function sendQuote(projectId, rateCardId, _quoteBreakdown) {
   }
 
   await persistQuote(projectId, rateCardId, result.rates, result.breakdown);
+  await logActivity(projectId, gate.actor.name, gate.actor.role, 'Quote sent to client', null);
   return { ok: true };
 }
 
@@ -89,7 +102,8 @@ export async function sendQuote(projectId, rateCardId, _quoteBreakdown) {
  * button after a denial (denied -> quoted). Always refreshes quoted_price.
  */
 export async function resendQuote(projectId, rateCardId, _quoteBreakdown) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
   const result = await recomputeWithRateCard(projectId, rateCardId);
   if (result.error) return result;
@@ -98,6 +112,7 @@ export async function resendQuote(projectId, rateCardId, _quoteBreakdown) {
   }
 
   await persistQuote(projectId, rateCardId, result.rates, result.breakdown);
+  await logActivity(projectId, gate.actor.name, gate.actor.role, 'Quote revised and resent', null);
   return { ok: true };
 }
 
@@ -142,7 +157,8 @@ export async function advanceStatus(projectId) {
  * client_name, code, and status are intentionally NOT editable here. Admin only.
  */
 export async function updateProject(projectId, formData) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
   if (!projectId) return { error: 'Missing project id.' };
 
   const facilityName    = String(formData.get('facility_name')    ?? '').trim();
@@ -170,6 +186,7 @@ export async function updateProject(projectId, formData) {
   );
   if (!rowCount) return { error: 'Project not found.' };
 
+  await logActivity(projectId, gate.actor.name, gate.actor.role, 'Project details updated', null);
   revalidatePath('/projects');
   revalidatePath(`/projects/${projectId}`);
   return { ok: true };
@@ -179,12 +196,19 @@ export async function updateProject(projectId, formData) {
  * Permanently delete a project. Shipments and install_tasks rows are removed
  * automatically via ON DELETE CASCADE on their project_id FKs. Admin only.
  * Redirects to /projects on success.
+ *
+ * Log BEFORE the delete because activity_log.project_id cascades on delete too —
+ * a post-delete row would be immediately removed.
  */
 export async function deleteProject(projectId) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
-  const { rowCount } = await query('DELETE FROM projects WHERE id = $1', [projectId]);
-  if (!rowCount) return { error: 'Project not found.' };
+  const { rows } = await query('SELECT id FROM projects WHERE id = $1', [projectId]);
+  if (!rows.length) return { error: 'Project not found.' };
+
+  await logActivity(projectId, gate.actor.name, gate.actor.role, 'Project deleted', null);
+  await query('DELETE FROM projects WHERE id = $1', [projectId]);
 
   revalidatePath('/projects');
   revalidatePath('/dashboard');
@@ -205,7 +229,8 @@ const INSTALL_TASK_TYPES = [
  * Insert a new shipment row on a project. Admin only.
  */
 export async function addShipment(projectId, formData) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
   const vendor      = String(formData.get('vendor')      ?? '').trim();
   const category    = String(formData.get('category')    ?? '').trim();
@@ -229,6 +254,10 @@ export async function addShipment(projectId, formData) {
     [projectId, vendor, category, description, qty, weightPerUnitLbs, cartons, eta],
   );
 
+  await logActivity(
+    projectId, gate.actor.name, gate.actor.role,
+    `Shipment added: ${vendor} - ${description}`, null,
+  );
   revalidatePath(`/projects/${projectId}`);
   revalidatePath('/ops');
   return { ok: true };
@@ -238,7 +267,8 @@ export async function addShipment(projectId, formData) {
  * Insert a new install task row on a project. Admin only.
  */
 export async function addInstallTask(projectId, formData) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
   const type  = String(formData.get('type')  ?? '').trim();
   const qty   = parseInt(formData.get('qty') ?? '0', 10) || 0;
@@ -253,6 +283,10 @@ export async function addInstallTask(projectId, formData) {
     [projectId, type, qty, notes],
   );
 
+  await logActivity(
+    projectId, gate.actor.name, gate.actor.role,
+    `Install task added: ${type}`, null,
+  );
   revalidatePath(`/projects/${projectId}`);
   revalidatePath('/ops');
   return { ok: true };
@@ -273,7 +307,8 @@ export async function markShipmentReceived(shipmentId, received, projectId) {
  * Update the editable fields on a shipment. Admin only.
  */
 export async function updateShipment(shipmentId, projectId, formData) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
   const vendor      = String(formData.get('vendor')      ?? '').trim();
   const category    = String(formData.get('category')    ?? '').trim();
@@ -299,6 +334,10 @@ export async function updateShipment(shipmentId, projectId, formData) {
   );
   if (!rowCount) return { error: 'Shipment not found.' };
 
+  await logActivity(
+    projectId, gate.actor.name, gate.actor.role,
+    `Shipment updated: ${vendor}`, null,
+  );
   revalidatePath('/projects');
   revalidatePath(`/projects/${projectId}`);
   revalidatePath('/ops');
@@ -309,14 +348,22 @@ export async function updateShipment(shipmentId, projectId, formData) {
  * Permanently delete a shipment. Admin only.
  */
 export async function deleteShipment(shipmentId, projectId) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
-  const { rowCount } = await query(
-    'DELETE FROM shipments WHERE id = $1',
+  const { rows } = await query(
+    'SELECT vendor FROM shipments WHERE id = $1',
     [shipmentId],
   );
-  if (!rowCount) return { error: 'Shipment not found.' };
+  if (!rows.length) return { error: 'Shipment not found.' };
+  const vendor = rows[0].vendor;
 
+  await query('DELETE FROM shipments WHERE id = $1', [shipmentId]);
+
+  await logActivity(
+    projectId, gate.actor.name, gate.actor.role,
+    `Shipment deleted: ${vendor}`, null,
+  );
   revalidatePath('/projects');
   revalidatePath(`/projects/${projectId}`);
   revalidatePath('/ops');
@@ -338,7 +385,8 @@ export async function toggleInstallTask(taskId, completed, projectId) {
  * Update the editable fields on an install task. Admin only.
  */
 export async function updateInstallTask(taskId, projectId, formData) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
   const type  = String(formData.get('type')  ?? '').trim();
   const qty   = parseInt(formData.get('qty') ?? '0', 10) || 0;
@@ -365,7 +413,8 @@ export async function updateInstallTask(taskId, projectId, formData) {
  * Permanently delete an install task. Admin only.
  */
 export async function deleteInstallTask(taskId, projectId) {
-  if (!(await isAdmin())) return { error: 'Unauthorized. Admin role required.' };
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
 
   const { rowCount } = await query(
     'DELETE FROM install_tasks WHERE id = $1',
@@ -373,6 +422,10 @@ export async function deleteInstallTask(taskId, projectId) {
   );
   if (!rowCount) return { error: 'Install task not found.' };
 
+  await logActivity(
+    projectId, gate.actor.name, gate.actor.role,
+    'Install task deleted', null,
+  );
   revalidatePath('/projects');
   revalidatePath(`/projects/${projectId}`);
   revalidatePath('/ops');

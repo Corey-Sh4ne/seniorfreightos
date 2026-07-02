@@ -5,6 +5,7 @@ import {
   getShipmentsByProjectId,
   getInstallTasksByProjectId,
   getRateCardsForQuote,
+  getActivityLogByProjectId,
 } from './_data/getProject';
 import ProjectDetailClient from './_components/ProjectDetailClient';
 
@@ -32,8 +33,13 @@ export default async function ProjectDetailPage({ params }) {
   // Rate cards power the admin quote tab's selector + live recalculation. Only
   // admins ever see pricing, so skip the lookup entirely for client users.
   let rateCardData = { rateCards: [], suggestedRateCardId: null, defaultRateCardId: null };
+  // Activity log powers the History tab, which is admin-only.
+  let activityLog = [];
   if (isAdmin) {
-    rateCardData = await getRateCardsForQuote(project.clientName);
+    [rateCardData, activityLog] = await Promise.all([
+      getRateCardsForQuote(project.clientName),
+      getActivityLogByProjectId(id),
+    ]);
   }
 
   return (
@@ -44,6 +50,7 @@ export default async function ProjectDetailPage({ params }) {
       rateCards={rateCardData.rateCards}
       suggestedRateCardId={rateCardData.suggestedRateCardId}
       defaultRateCardId={rateCardData.defaultRateCardId}
+      activityLog={activityLog}
       role={role}
     />
   );

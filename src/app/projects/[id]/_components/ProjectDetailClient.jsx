@@ -11,6 +11,7 @@ import EditProjectModal from './EditProjectModal';
 import ShipmentsTab from './ShipmentsTab';
 import InstallTasksTab from './InstallTasksTab';
 import PricingQuoteTab from './PricingQuoteTab';
+import ActivityLogTab from './ActivityLogTab';
 
 const DATE_FMT = new Intl.DateTimeFormat('en-US', {
   month: 'short', day: 'numeric', timeZone: 'UTC',
@@ -27,11 +28,13 @@ function StatCard({ label, value, danger }) {
   );
 }
 
-const ALL_TABS = ['Shipments', 'Install Tasks', 'Pricing Quote', 'Notes'];
+const ALL_TABS = ['Shipments', 'Install Tasks', 'Pricing Quote', 'Notes', 'History'];
+const ADMIN_ONLY_TABS = new Set(['Pricing Quote', 'History']);
 
 export default function ProjectDetailClient({
   project, shipments, installTasks, role,
   rateCards = [], suggestedRateCardId = null, defaultRateCardId = null,
+  activityLog = [],
 }) {
   const [activeTab, setActiveTab] = useState('Shipments');
   const [showEdit, setShowEdit] = useState(false);
@@ -41,7 +44,7 @@ export default function ProjectDetailClient({
   const isAdmin = role === 'admin';
 
   const totalWeight   = shipments.reduce((s, sh) => s + sh.qty * sh.weightPerUnitLbs, 0);
-  const visibleTabs   = isAdmin ? ALL_TABS : ALL_TABS.filter((t) => t !== 'Pricing Quote');
+  const visibleTabs   = isAdmin ? ALL_TABS : ALL_TABS.filter((t) => !ADMIN_ONLY_TABS.has(t));
   const startDateStr  = project.createdAt ? DATE_FMT.format(new Date(project.createdAt)) : '—';
   const statusLabel   = project.status
     ? project.status.charAt(0).toUpperCase() + project.status.slice(1)
@@ -136,7 +139,7 @@ export default function ProjectDetailClient({
                   : 'border-transparent text-zinc-500 hover:text-zinc-900',
               ].join(' ')}
             >
-              {tab === 'Pricing Quote' ? '🔒 Pricing Quote' : tab}
+              {ADMIN_ONLY_TABS.has(tab) ? `🔒 ${tab}` : tab}
             </button>
           ))}
           {!isAdmin && (
@@ -179,6 +182,9 @@ export default function ProjectDetailClient({
                 {project.notes || 'No notes recorded.'}
               </p>
             </div>
+          )}
+          {activeTab === 'History' && isAdmin && (
+            <ActivityLogTab entries={activityLog} />
           )}
         </main>
       </div>
