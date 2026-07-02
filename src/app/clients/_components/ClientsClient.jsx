@@ -66,7 +66,7 @@ export default function ClientsClient({ clients, rateCards, clerkUsers }) {
                 </tr>
               ) : (
                 clients.map((client) => (
-                  <tr key={client.id} className="border-b border-zinc-100 last:border-0">
+                  <tr key={client.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors duration-100">
                     <td className="px-4 py-3 font-semibold text-zinc-900 whitespace-nowrap">{client.name}</td>
                     <td className="px-4 py-3 text-zinc-600">
                       <div>{client.contactName || '—'}</div>

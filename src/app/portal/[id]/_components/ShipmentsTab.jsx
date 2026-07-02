@@ -59,7 +59,7 @@ export default function ShipmentsTab({ shipments }) {
           {shipments.map((s) => (
             <tr
               key={s.id}
-              className="border-b border-zinc-50 last:border-0 hover:bg-zinc-50/70 transition-colors"
+              className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors duration-100"
             >
               <td className="py-3.5 pr-4 font-semibold text-zinc-900 whitespace-nowrap">{s.vendor}</td>
               <td className="py-3.5 pr-4 text-zinc-500 whitespace-nowrap">{s.category ?? '—'}</td>

@@ -45,7 +45,7 @@ function NavLink({ href, label, active }) {
         'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors',
         active
           ? 'bg-blue-600 text-white'
-          : 'text-slate-300 hover:bg-slate-800 hover:text-white',
+          : 'text-slate-300 hover:bg-white/10 hover:text-white',
       ].join(' ')}
     >
       {label}
@@ -100,7 +100,7 @@ export default function Sidebar({ viewAs = 'admin' }) {
         <p className="text-white font-semibold text-sm tracking-tight leading-tight">
           SeniorFreightOS
         </p>
-        <p className="text-slate-500 text-xs mt-0.5">Olson Resource Group</p>
+        <p className="text-white/50 text-xs mt-0.5">Olson Resource Group</p>
         {badge && (
           <span className="inline-block mt-2 px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-semibold uppercase tracking-wide">
             {badge}
@@ -121,7 +121,7 @@ export default function Sidebar({ viewAs = 'admin' }) {
       </nav>
 
       {/* Bottom nav */}
-      <div className="px-3 pb-4 border-t border-slate-700/60 pt-3 space-y-0.5">
+      <div className="px-3 pb-4 border-t border-white/10 pt-3 mt-3 space-y-0.5">
         <ViewAsSelect viewAs={viewAs} />
         {bottom.map((item) => (
           <NavLink

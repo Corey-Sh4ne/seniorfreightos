@@ -1,19 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-const STATUS_BADGE = {
-  'Quote':      'bg-zinc-100 text-zinc-500',
-  'PO Issued':  'bg-orange-100 text-orange-700',
-  'Received':   'bg-cyan-100 text-cyan-700',
-  'QC':         'bg-sky-100 text-sky-700',
-  'Staged':     'bg-violet-100 text-violet-700',
-  'Loaded':     'bg-indigo-100 text-indigo-700',
-  'In Transit': 'bg-blue-100 text-blue-700',
-  'Delivered':  'bg-emerald-100 text-emerald-700',
-  'Installed':  'bg-green-100 text-green-700',
-  'Delayed':    'bg-amber-100 text-amber-700',
-};
+import StatusBadge from '@/components/StatusBadge';
 
 const COLUMNS = ['CODE', 'CLIENT', 'FACILITY', 'STATUS', 'WEIGHT', 'SHIPS', 'MILES', 'RUSH', 'CREATED'];
 const PAGE_SIZE = 10;
@@ -57,7 +45,7 @@ export default function ProjectsTable({ projects }) {
                   key={p.id}
                   onClick={() => router.push(`/projects/${p.id}`)}
                   className={[
-                    'border-b border-zinc-100 last:border-0 cursor-pointer transition-colors hover:bg-blue-50/40 group',
+                    'border-b border-gray-100 last:border-0 cursor-pointer transition-colors duration-100 hover:bg-gray-50 group',
                     delayed ? 'border-l-[3px] border-l-amber-400' : 'border-l-[3px] border-l-transparent',
                   ].join(' ')}
                 >
@@ -70,9 +58,7 @@ export default function ProjectsTable({ projects }) {
                     </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${STATUS_BADGE[p.status] ?? 'bg-zinc-100 text-zinc-500'}`}>
-                      {p.status}
-                    </span>
+                    <StatusBadge status={p.status} />
                   </td>
                   <td className="px-4 py-3 text-zinc-500 whitespace-nowrap tabular-nums">
                     {p.weight > 0 ? `${p.weight.toLocaleString()} lbs` : '—'}

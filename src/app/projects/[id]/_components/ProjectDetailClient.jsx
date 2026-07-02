@@ -21,11 +21,13 @@ const DATE_FMT = new Intl.DateTimeFormat('en-US', {
 
 function StatCard({ label, value, danger }) {
   return (
-    <div className="bg-white border border-zinc-200 rounded-lg px-4 py-3 min-w-[110px]">
-      <p className={`text-lg font-bold leading-tight ${danger ? 'text-red-500' : 'text-zinc-900'}`}>
+    <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 min-w-[110px]">
+      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide whitespace-nowrap">
+        {label}
+      </p>
+      <p className={`text-xl font-bold mt-1 ${danger ? 'text-red-600' : 'text-gray-900'}`}>
         {value}
       </p>
-      <p className="text-xs text-zinc-400 mt-0.5 whitespace-nowrap">{label}</p>
     </div>
   );
 }
@@ -107,15 +109,14 @@ export default function ProjectDetailClient({
 
         {/* ── Status rail card ───────────────────────────────────────────── */}
         <div className="bg-white px-5 pt-4 pb-6 shrink-0">
-          {/* Scaled down so the 9-stage rail fits cleanly on one line. */}
-          <div className="origin-left scale-90">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-6 py-4 mb-4 w-full overflow-x-auto">
             <StatusRail currentStatus={toPipelineStatus(project.status)} />
           </div>
         </div>
 
         {/* ── Key stats ──────────────────────────────────────────────────── */}
         <div className="bg-white border-b border-zinc-200 px-4 pt-1 pb-4 shrink-0">
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-200 shadow-sm bg-zinc-50/60 px-3 py-3">
+          <div className="flex flex-wrap gap-3">
             <StatCard label="Total Weight"   value={`${totalWeight.toLocaleString()} lb`} />
             <StatCard label="Miles from Hub" value={`${project.milesFromHub} mi`} />
             <StatCard label="Storage"        value={`${project.storageDays} days`} />

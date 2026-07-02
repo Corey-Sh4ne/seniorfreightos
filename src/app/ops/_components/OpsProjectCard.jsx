@@ -43,7 +43,7 @@ export default function OpsProjectCard({ project, completed = false }) {
       </div>
 
       {/* Pipeline rail */}
-      <div className="px-5 py-4">
+      <div className="px-5 py-4 w-full overflow-x-auto">
         <StatusRail currentStatus={toPipelineStatus(project.status)} />
       </div>
 

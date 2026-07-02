@@ -225,9 +225,9 @@ export default function ShipmentsTab({ shipments, projectId, projectStatus }) {
               {canEdit && <th className="px-4 py-3 text-right">Actions</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-gray-100">
             {shipments.map((s) => (
-              <tr key={s.id} className="hover:bg-zinc-50 transition-colors">
+              <tr key={s.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-100">
                 <td className="px-4 py-3 font-medium text-zinc-900">{s.vendor}</td>
                 <td className="px-4 py-3 text-zinc-500 text-xs">{s.category}</td>
                 <td className="px-4 py-3 text-zinc-600">{s.description}</td>

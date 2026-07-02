@@ -49,14 +49,14 @@ export default function DashboardClient({ projects, viewAs = 'admin' }) {
       <Sidebar viewAs={viewAs} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white border-b border-zinc-200 px-6 py-4 flex items-center justify-between shrink-0">
+        <header className="bg-white border-b border-zinc-200 px-6 py-4 flex justify-between items-start shrink-0">
           <div>
-            <h1 className="text-lg font-semibold text-zinc-900 leading-tight">Dashboard</h1>
-            <p className="text-xs text-zinc-400 mt-0.5">FF&amp;E logistics overview</p>
+            <h1 className="text-2xl font-bold text-gray-900 leading-tight">Dashboard</h1>
+            <p className="text-sm text-gray-400 mt-0.5">FF&amp;E logistics overview</p>
           </div>
           <Link
             href="/projects/new"
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition-colors"
           >
             <span className="text-base leading-none">+</span>
             <span>New Project</span>
