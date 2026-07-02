@@ -49,6 +49,7 @@ export async function getProjects() {
     miles:         Number(row.miles),
     rush:          row.rush,
     created:       DATE_FMT.format(new Date(row.created_at)),
+    createdAt:     new Date(row.created_at).toISOString(),
     shipsTotal:    Number(row.shipsTotal),
     shipsReceived: Number(row.shipsReceived),
     weight:        Number(row.weight),

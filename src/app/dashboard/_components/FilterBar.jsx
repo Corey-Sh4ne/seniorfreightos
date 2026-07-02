@@ -6,6 +6,7 @@ export default function FilterBar({
   search, onSearch,
   statusFilter, onStatusChange, statuses,
   clientFilter, onClientChange, clients,
+  timeFilter = 'all', onTimeChange,
 }) {
   return (
     <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-4 flex flex-wrap gap-3 items-center">
@@ -37,8 +38,12 @@ export default function FilterBar({
         ))}
       </select>
 
-      {/* Date range — static placeholder */}
-      <select className={SELECT_CLS} defaultValue="all">
+      {/* Date range */}
+      <select
+        value={timeFilter}
+        onChange={(e) => onTimeChange?.(e.target.value)}
+        className={SELECT_CLS}
+      >
         <option value="all">All Time</option>
         <option value="week">This Week</option>
         <option value="month">This Month</option>
@@ -46,9 +51,14 @@ export default function FilterBar({
       </select>
 
       {/* Clear button — only visible when filters are active */}
-      {(search || statusFilter !== 'All' || clientFilter !== 'All') && (
+      {(search || statusFilter !== 'All' || clientFilter !== 'All' || timeFilter !== 'all') && (
         <button
-          onClick={() => { onSearch(''); onStatusChange('All'); onClientChange('All'); }}
+          onClick={() => {
+            onSearch('');
+            onStatusChange('All');
+            onClientChange('All');
+            onTimeChange?.('all');
+          }}
           className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors px-2 py-1 rounded"
         >
           Clear filters
