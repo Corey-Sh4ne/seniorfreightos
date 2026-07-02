@@ -21,13 +21,9 @@ const DATE_FMT = new Intl.DateTimeFormat('en-US', {
 
 function StatCard({ label, value, danger }) {
   return (
-    <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 min-w-[110px]">
-      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide whitespace-nowrap">
-        {label}
-      </p>
-      <p className={`text-xl font-bold mt-1 ${danger ? 'text-red-600' : 'text-gray-900'}`}>
-        {value}
-      </p>
+    <div style={{background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '16px', minWidth: '120px'}}>
+      <p style={{fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap'}}>{label}</p>
+      <p style={{fontSize: '20px', fontWeight: 700, marginTop: '4px', color: danger ? '#DC2626' : '#111827'}}>{value}</p>
     </div>
   );
 }
@@ -69,7 +65,7 @@ export default function ProjectDetailClient({
     <div className="flex h-screen bg-zinc-50 overflow-hidden">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{background: '#F3F4F6'}}>
         {/* ── Top header bar ─────────────────────────────────────────────── */}
         <header className="bg-white border-b border-zinc-200 h-14 flex items-center px-4 gap-3 shrink-0">
           <Link
@@ -108,10 +104,8 @@ export default function ProjectDetailClient({
         </header>
 
         {/* ── Status rail card ───────────────────────────────────────────── */}
-        <div className="bg-white px-5 pt-4 pb-6 shrink-0">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-6 py-4 mb-4 w-full overflow-x-auto">
-            <StatusRail currentStatus={toPipelineStatus(project.status)} />
-          </div>
+        <div style={{background: 'white', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: '24px 32px', marginBottom: '16px', width: '100%', overflowX: 'auto'}}>
+          <StatusRail currentStatus={toPipelineStatus(project.status)} />
         </div>
 
         {/* ── Key stats ──────────────────────────────────────────────────── */}

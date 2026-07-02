@@ -1,54 +1,26 @@
 import { LayoutDashboard, AlertTriangle, FileText, CheckCircle } from 'lucide-react';
 
 const CARDS = [
-  {
-    key: 'active',
-    label: 'Active Projects',
-    Icon: LayoutDashboard,
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-600',
-  },
-  {
-    key: 'delayed',
-    label: 'Delayed',
-    Icon: AlertTriangle,
-    iconBg: 'bg-red-50',
-    iconColor: 'text-red-500',
-    danger: true,
-  },
-  {
-    key: 'quotes',
-    label: 'Pending Quotes',
-    Icon: FileText,
-    iconBg: 'bg-amber-50',
-    iconColor: 'text-amber-600',
-  },
-  {
-    key: 'doneWeek',
-    label: 'Done This Week',
-    Icon: CheckCircle,
-    iconBg: 'bg-green-50',
-    iconColor: 'text-green-600',
-  },
+  { key: 'active',   label: 'Active Projects', Icon: LayoutDashboard, iconBg: '#EFF6FF', iconColor: '#2563EB' },
+  { key: 'delayed',  label: 'Delayed',          Icon: AlertTriangle,   iconBg: '#FEF2F2', iconColor: '#EF4444', danger: true },
+  { key: 'quotes',   label: 'Pending Quotes',   Icon: FileText,        iconBg: '#FFFBEB', iconColor: '#D97706' },
+  { key: 'doneWeek', label: 'Done This Week',   Icon: CheckCircle,     iconBg: '#F0FDF4', iconColor: '#16A34A' },
 ];
 
 export default function StatCards({ stats }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
       {CARDS.map(({ key, label, Icon, iconBg, iconColor, danger }) => {
         const value = stats[key] ?? 0;
-        const numberColor = danger && value > 0 ? 'text-red-600' : 'text-gray-900';
+        const numColor = danger && value > 0 ? '#DC2626' : '#111827';
         return (
-          <div
-            key={key}
-            className="flex items-start gap-4 bg-white rounded-xl border border-gray-100 shadow-sm p-6"
-          >
-            <div className={`shrink-0 flex items-center justify-center rounded-lg p-2 w-10 h-10 ${iconBg} ${iconColor}`}>
-              <Icon className="w-5 h-5" />
+          <div key={key} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', background: 'white', borderRadius: '12px', border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', padding: '24px' }}>
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '8px', background: iconBg }}>
+              <Icon size={20} color={iconColor} />
             </div>
-            <div className="min-w-0">
-              <p className={`text-3xl font-bold leading-none ${numberColor}`}>{value}</p>
-              <p className="text-sm text-gray-500 mt-1">{label}</p>
+            <div>
+              <p style={{ fontSize: '30px', fontWeight: 700, lineHeight: 1, color: numColor }}>{value}</p>
+              <p style={{ fontSize: '14px', color: '#6B7280', marginTop: '4px' }}>{label}</p>
             </div>
           </div>
         );

@@ -45,7 +45,7 @@ export default function DashboardClient({ projects, viewAs = 'admin' }) {
   };
 
   return (
-    <div className="flex h-screen bg-zinc-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-200 overflow-hidden">
       <Sidebar viewAs={viewAs} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
