@@ -13,6 +13,7 @@ import InstallTasksTab from './InstallTasksTab';
 import PricingQuoteTab from './PricingQuoteTab';
 import ActivityLogTab from './ActivityLogTab';
 import NotesTab from './NotesTab';
+import InvoiceSection from './InvoiceSection';
 
 const DATE_FMT = new Intl.DateTimeFormat('en-US', {
   month: 'short', day: 'numeric', timeZone: 'UTC',
@@ -126,6 +127,11 @@ export default function ProjectDetailClient({
             <StatCard label="Start" value={startDateStr} />
           </div>
         </div>
+
+        {/* ── Invoice section (only when the project is billable) ────────── */}
+        {isAdmin && (project.status === 'complete' || project.status === 'invoiced') && (
+          <InvoiceSection project={project} />
+        )}
 
         {/* ── Tab bar ────────────────────────────────────────────────────── */}
         <div className="bg-white border-b border-zinc-200 px-4 flex shrink-0">

@@ -215,6 +215,80 @@ export async function deleteProject(projectId) {
   redirect('/projects');
 }
 
+const INVOICE_STATUSES = new Set(['draft', 'sent', 'paid']);
+
+/**
+ * Generate an invoice for a completed project. Snapshots the invoice number as
+ * INV-<project code>, stamps the generation time, and flips project status to
+ * 'invoiced'. Admin only. Only allowed when the project has reached 'complete'
+ * or has already been invoiced (idempotent re-generation is rejected below).
+ */
+export async function generateInvoice(projectId) {
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
+
+  const { rows } = await query(
+    'SELECT code, status, invoice_number FROM projects WHERE id = $1',
+    [projectId],
+  );
+  if (!rows.length) return { error: 'Project not found.' };
+  const { code, status, invoice_number } = rows[0];
+
+  if (invoice_number) return { error: 'Invoice has already been generated.' };
+  if (status !== 'complete' && status !== 'invoiced') {
+    return { error: 'Invoice can only be generated once the project is complete.' };
+  }
+
+  const invoiceNumber = `INV-${code}`;
+  await query(
+    `UPDATE projects
+        SET invoice_number = $1,
+            invoice_generated_at = NOW(),
+            invoice_status = 'draft',
+            status = 'invoiced',
+            updated_at = NOW()
+      WHERE id = $2`,
+    [invoiceNumber, projectId],
+  );
+
+  await logActivity(
+    projectId, gate.actor.name, gate.actor.role,
+    'Invoice generated', invoiceNumber,
+  );
+  revalidatePath('/projects');
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(`/projects/${projectId}/invoice`);
+  return { ok: true };
+}
+
+/**
+ * Update the workflow status of an existing invoice (draft/sent/paid). Admin
+ * only. Requires that an invoice number has already been assigned.
+ */
+export async function updateInvoiceStatus(projectId, status) {
+  const gate = await getAdminActor();
+  if (gate.error) return gate;
+
+  if (!INVOICE_STATUSES.has(status)) return { error: 'Invalid invoice status.' };
+
+  const { rowCount } = await query(
+    `UPDATE projects
+        SET invoice_status = $1, updated_at = NOW()
+      WHERE id = $2 AND invoice_number IS NOT NULL`,
+    [status, projectId],
+  );
+  if (!rowCount) return { error: 'No invoice to update.' };
+
+  await logActivity(
+    projectId, gate.actor.name, gate.actor.role,
+    `Invoice marked as ${status}`, null,
+  );
+  revalidatePath('/projects');
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(`/projects/${projectId}/invoice`);
+  return { ok: true };
+}
+
 const SHIPMENT_CATEGORIES = [
   'Casegoods', 'Seating', 'Mattresses & Bedding', 'Window Treatments',
   'Art & Decor', 'Lighting', 'Signage', 'Appliances', 'Flooring',

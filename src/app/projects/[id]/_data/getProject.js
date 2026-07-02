@@ -10,7 +10,8 @@ export async function getProjectById(id) {
     `SELECT id, code, client_name, facility_name, facility_address,
             contact_name, contact_email, miles_from_hub, status,
             storage_days, rush_delivery, rates, notes, stage_notes,
-            created_at, updated_at, quoted_price, accepted_at
+            created_at, updated_at, quoted_price, accepted_at,
+            invoice_number, invoice_generated_at, invoice_status
      FROM projects WHERE id = $1`,
     [id],
   );
@@ -35,6 +36,9 @@ export async function getProjectById(id) {
     updatedAt:       r.updated_at,
     quotedPrice:     r.quoted_price ?? null,
     acceptedAt:      r.accepted_at ?? null,
+    invoiceNumber:      r.invoice_number ?? null,
+    invoiceGeneratedAt: r.invoice_generated_at ?? null,
+    invoiceStatus:      r.invoice_status ?? null,
   };
 }
 
