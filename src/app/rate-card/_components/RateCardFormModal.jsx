@@ -24,10 +24,23 @@ function Field({ label, name, defaultValue, placeholder, step = '0.001', unit })
   );
 }
 
-function Section({ title, children }) {
+function Section({ title, children, first = false }) {
   return (
-    <div>
-      <h3 className="mb-3 text-sm font-semibold text-zinc-900">{title}</h3>
+    <div style={{ marginTop: first ? 0 : '20px' }}>
+      <h3
+        style={{
+          fontSize: '13px',
+          fontWeight: 700,
+          color: '#374151',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          marginBottom: '12px',
+          paddingBottom: '8px',
+          borderBottom: '2px solid #E5E7EB',
+        }}
+      >
+        {title}
+      </h3>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
     </div>
   );
@@ -110,30 +123,30 @@ export default function RateCardFormModal({ mode, card, defaultRates, onClose })
           />
         </div>
 
-        <Section title="Receiving">
-          <Field label="Rate per lb" name="receivingPerLb" unit="$/lb" defaultValue={Number(amt('receivingPerLb')) || 0} placeholder={amtPh('receivingPerLb')} />
+        <Section title="Receiving" first>
+          <Field label="Rate per lb" name="receivingPerLb" unit="$/lb" defaultValue={Number(amt('receivingPerLb')) || 0} placeholder="e.g. 0.09" />
         </Section>
 
         <Section title="Storage">
-          <Field label="Rate per lb / day" name="storagePerLbPerDay" unit="$/lb/day" defaultValue={Number(amt('storagePerLbPerDay')) || 0} placeholder={amtPh('storagePerLbPerDay')} />
+          <Field label="Rate per lb / day" name="storagePerLbPerDay" unit="$/lb/day" defaultValue={Number(amt('storagePerLbPerDay')) || 0} placeholder="e.g. 0.05" />
         </Section>
 
         <Section title="Freight">
-          <Field label="Rate per lb" name="freightPerLb" unit="$/lb" defaultValue={Number(amt('freightPerLb')) || 0} placeholder={amtPh('freightPerLb')} />
-          <Field label="Minimum charge" name="freightMinimum" unit="$" step="1" defaultValue={Number(amt('freightMinimum')) || 0} placeholder={amtPh('freightMinimum')} />
-          <Field label="Fuel surcharge" name="fuelSurchargePct" unit="%" step="0.01" defaultValue={Number(pctVal('fuelSurchargePct')) || 0} placeholder={pctPh('fuelSurchargePct')} />
-          <Field label="Rush surcharge" name="rushSurchargePct" unit="%" step="0.01" defaultValue={Number(pctVal('rushSurchargePct')) || 0} placeholder={pctPh('rushSurchargePct')} />
+          <Field label="Rate per lb" name="freightPerLb" unit="$/lb" defaultValue={Number(amt('freightPerLb')) || 0} placeholder="e.g. 0.17" />
+          <Field label="Minimum charge" name="freightMinimum" unit="$" step="1" defaultValue={Number(amt('freightMinimum')) || 0} placeholder="e.g. 500" />
+          <Field label="Fuel surcharge" name="fuelSurchargePct" unit="%" step="0.01" defaultValue={Number(pctVal('fuelSurchargePct')) || 0} placeholder="e.g. 15" />
+          <Field label="Rush surcharge" name="rushSurchargePct" unit="%" step="0.01" defaultValue={Number(pctVal('rushSurchargePct')) || 0} placeholder="e.g. 10" />
         </Section>
 
         <Section title="Install Tasks">
           {INSTALL_TASKS.map(({ key, label }) => (
-            <Field key={key} label={label} name={`install_${key}`} unit="$/unit" step="0.01" defaultValue={Number(task(key)) || 0} placeholder="0" />
+            <Field key={key} label={label} name={`install_${key}`} unit="$/unit" step="0.01" defaultValue={Number(task(key)) || 0} placeholder="e.g. 25" />
           ))}
         </Section>
 
         <Section title="Overhead & Margin">
-          <Field label="Overhead" name="overheadPct" unit="%" step="0.01" defaultValue={Number(pctVal('overheadPct')) || 0} placeholder={pctPh('overheadPct')} />
-          <Field label="Margin" name="marginPct" unit="%" step="0.01" defaultValue={Number(pctVal('marginPct')) || 0} placeholder={pctPh('marginPct')} />
+          <Field label="Overhead" name="overheadPct" unit="%" step="0.01" defaultValue={Number(pctVal('overheadPct')) || 0} placeholder="e.g. 5" />
+          <Field label="Margin" name="marginPct" unit="%" step="0.01" defaultValue={Number(pctVal('marginPct')) || 0} placeholder="e.g. 18" />
         </Section>
 
         <div className="flex items-center justify-between gap-4 border-t border-zinc-200 pt-5">

@@ -4,6 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { query } from '@/db/index';
 import { logActivity } from '@/utils/activityLogger';
+import { simulateEmailNotification } from '@/utils/notifyEmail';
+
+const ADMIN_NOTIFY_EMAIL = 'admin@seniorfreightos.com';
+
+/** Fetch the project code (used to label simulated admin-notification emails). */
+async function getProjectCode(projectId) {
+  const { rows } = await query('SELECT code FROM projects WHERE id = $1', [projectId]);
+  return rows[0]?.code ?? projectId;
+}
 
 /**
  * Fetch the current caller's display name + role from Clerk for activity_log
@@ -66,11 +75,17 @@ export async function acceptQuote(projectId, clientName) {
     await logActivity(projectId, actor.name, actor.role, 'Quote accepted by client', null);
   }
 
+  const code = await getProjectCode(projectId);
+  const subject = `Quote Accepted — ${code}`;
+  const actorName = actor?.name ?? 'Client';
+  const actorRole = actor?.role ?? 'client_user';
+  await simulateEmailNotification(projectId, ADMIN_NOTIFY_EMAIL, subject, actorName, actorRole);
+
   revalidatePath('/portal');
   revalidatePath('/dashboard');
   revalidatePath('/projects');
   revalidatePath(`/portal/${projectId}`);
-  return { ok: true };
+  return { ok: true, emailNotification: { to: ADMIN_NOTIFY_EMAIL, subject } };
 }
 
 /**
@@ -92,9 +107,15 @@ export async function denyQuote(projectId, clientName) {
     await logActivity(projectId, actor.name, actor.role, 'Quote denied by client', null);
   }
 
+  const code = await getProjectCode(projectId);
+  const subject = `Quote Denied — ${code}`;
+  const actorName = actor?.name ?? 'Client';
+  const actorRole = actor?.role ?? 'client_user';
+  await simulateEmailNotification(projectId, ADMIN_NOTIFY_EMAIL, subject, actorName, actorRole);
+
   revalidatePath('/portal');
   revalidatePath('/dashboard');
   revalidatePath('/projects');
   revalidatePath(`/portal/${projectId}`);
-  return { ok: true };
+  return { ok: true, emailNotification: { to: ADMIN_NOTIFY_EMAIL, subject } };
 }

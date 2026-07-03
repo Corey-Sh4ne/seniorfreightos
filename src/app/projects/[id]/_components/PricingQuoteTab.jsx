@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import QuoteBreakdown from '@/components/QuoteBreakdown';
 import { sendQuote, resendQuote } from '../_actions/projectActions';
@@ -86,9 +86,10 @@ function Shell({ children }) {
 export default function PricingQuoteTab({
   project, shipments, installTasks,
   rateCards = [], suggestedRateCardId, defaultRateCardId,
+  onEmailSent,
 }) {
   const { status } = project;
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   // Build the grouped dropdown ordering: Suggested → Default → Other (A-Z).
   const groups = useMemo(() => {
@@ -132,15 +133,29 @@ export default function PricingQuoteTab({
   const savedBreakdown = project.quotedPrice ?? null;
   const sentAt = project.updatedAt ? DATE_FMT.format(new Date(project.updatedAt)) : null;
 
-  function handleSend() {
+  async function handleSend() {
+    if (!selectedCard) return window.alert('Select a rate card first.');
     if (!window.confirm(
       `Send this quote to ${project.clientName}? They will receive it on their portal for review.`,
     )) return;
-    startTransition(() => sendQuote(project.id, selectedCard.id, liveBreakdown));
+    setPending(true);
+    try {
+      const res = await sendQuote(project.id, selectedCard.id, liveBreakdown);
+      if (res?.emailNotification?.to) onEmailSent?.(res.emailNotification);
+      console.log('sendQuote result:', JSON.stringify(res));
+    } finally {
+      setPending(false);
+    }
   }
 
-  function handleResend() {
-    startTransition(() => resendQuote(project.id, selectedCard.id, liveBreakdown));
+  async function handleResend() {
+    setPending(true);
+    try {
+      const res = await resendQuote(project.id, selectedCard.id, liveBreakdown);
+      if (res?.emailNotification?.to) onEmailSent?.(res.emailNotification);
+    } finally {
+      setPending(false);
+    }
   }
 
   // Quote already sent → read-only confirmation + the snapshotted breakdown.

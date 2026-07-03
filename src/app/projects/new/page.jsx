@@ -15,7 +15,7 @@ export default async function NewProjectPage() {
   );
 
   return (
-    <div className="flex h-screen bg-zinc-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -32,8 +32,11 @@ export default async function NewProjectPage() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-xl">
-            <p className="text-xs text-zinc-400 mb-6">
+          <div className="mx-auto max-w-[560px] bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+            <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', marginBottom: '24px' }}>
+              New Project
+            </h2>
+            <p className="text-xs text-zinc-500 mb-6">
               A project code (FTE-YYYY-###) will be auto-generated on save.
               Fields marked <span className="text-red-500 font-semibold">*</span> are required.
             </p>

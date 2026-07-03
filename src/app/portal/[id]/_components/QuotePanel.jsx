@@ -1,7 +1,8 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { acceptQuote, denyQuote } from '../_actions/quoteActions';
+import EmailToast from '@/components/EmailToast';
 
 const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
@@ -33,6 +34,7 @@ function Breakdown({ q }) {
 
 export default function QuotePanel({ project, clientName }) {
   const [pending, startTransition] = useTransition();
+  const [emailToast, setEmailToast] = useState(null);
   const { status, quotedPrice } = project;
 
   if (status === 'awarded') {
@@ -60,12 +62,18 @@ export default function QuotePanel({ project, clientName }) {
 
   function handleAccept() {
     if (!window.confirm('Accept this quote? Your project will move forward.')) return;
-    startTransition(() => acceptQuote(project.id, clientName));
+    startTransition(async () => {
+      const res = await acceptQuote(project.id, clientName);
+      if (res?.emailNotification) setEmailToast('Notification sent to your logistics team');
+    });
   }
 
   function handleDeny() {
     if (!window.confirm('Deny this quote? You can request a revised quote afterward.')) return;
-    startTransition(() => denyQuote(project.id, clientName));
+    startTransition(async () => {
+      const res = await denyQuote(project.id, clientName);
+      if (res?.emailNotification) setEmailToast('Notification sent to your logistics team');
+    });
   }
 
   return (
@@ -95,6 +103,10 @@ export default function QuotePanel({ project, clientName }) {
           Deny Quote
         </button>
       </div>
+
+      {emailToast && (
+        <EmailToast message={emailToast} onDismiss={() => setEmailToast(null)} />
+      )}
     </div>
   );
 }

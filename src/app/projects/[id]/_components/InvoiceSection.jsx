@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { generateInvoice, updateInvoiceStatus } from '../_actions/projectActions';
 
 const DATE_FMT = new Intl.DateTimeFormat('en-US', {
@@ -13,20 +13,23 @@ const STATUS_PILL = {
   paid:  'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
 
-export default function InvoiceSection({ project }) {
+export default function InvoiceSection({ project, onEmailSent }) {
   const [pending, startTransition] = useTransition();
+  const [generating, setGenerating] = useState(false);
   const {
     id, invoiceNumber, invoiceGeneratedAt, invoiceStatus,
   } = project;
 
-  function handleGenerate() {
-    if (!window.confirm(
-      `Generate an invoice for ${project.code}? The project will move to the Invoiced stage.`,
-    )) return;
-    startTransition(async () => {
+  async function handleGenerate() {
+    if (!window.confirm('Generate invoice for this project?')) return;
+    setGenerating(true);
+    try {
       const res = await generateInvoice(id);
-      if (res?.error) window.alert(res.error);
-    });
+      if (res?.error) { window.alert(res.error); return; }
+      if (res?.emailNotification?.to) onEmailSent?.(res.emailNotification);
+    } finally {
+      setGenerating(false);
+    }
   }
 
   function handleStatus(next) {
@@ -49,10 +52,10 @@ export default function InvoiceSection({ project }) {
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={pending}
+            disabled={generating}
             className="shrink-0 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white font-semibold text-xs px-4 py-2 transition-colors"
           >
-            {pending ? 'Generating…' : 'Generate Invoice'}
+            {generating ? 'Generating…' : 'Generate Invoice'}
           </button>
         </div>
       </div>

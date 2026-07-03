@@ -156,7 +156,7 @@ export default function NewProjectForm({ clients = [] }) {
       </div>
 
       {/* Miles from Hub / Storage Days */}
-      <div className="grid grid-cols-2 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div>
           <Label htmlFor="miles_from_hub">Miles from Hub</Label>
           <input
@@ -214,20 +214,22 @@ export default function NewProjectForm({ clients = [] }) {
       </div>
 
       {/* Submit / Cancel */}
-      <div className="flex items-center gap-4 pt-2">
+      <div className="pt-2 space-y-3">
         <button
           type="submit"
           disabled={!canSubmit}
-          className="bg-zinc-900 hover:bg-zinc-700 active:bg-zinc-800 disabled:bg-zinc-300 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors"
+          className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-300 disabled:cursor-not-allowed text-white font-medium px-6 py-2.5 rounded-lg transition-colors"
         >
           {pending ? 'Creating…' : 'Create Project'}
         </button>
-        <Link
-          href="/dashboard"
-          className="text-sm text-zinc-500 hover:text-zinc-700 transition-colors"
-        >
-          Cancel
-        </Link>
+        <div className="text-center">
+          <Link
+            href="/dashboard"
+            className="text-sm text-zinc-500 hover:text-zinc-700 transition-colors"
+          >
+            Cancel
+          </Link>
+        </div>
       </div>
     </form>
   );

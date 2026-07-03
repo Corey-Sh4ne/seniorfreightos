@@ -14,6 +14,7 @@ import {
 import { computePricingWithRates, buildFullQuoteBreakdown } from '@/utils/quote';
 import { rowToRateCard } from '@/app/rate-card/_lib/rateCardFields';
 import { logActivity } from '@/utils/activityLogger';
+import { simulateEmailNotification } from '@/utils/notifyEmail';
 
 /**
  * Admin gate that also returns the acting user's display name + role so callers
@@ -94,7 +95,13 @@ export async function sendQuote(projectId, rateCardId, _quoteBreakdown) {
 
   await persistQuote(projectId, rateCardId, result.rates, result.breakdown);
   await logActivity(projectId, gate.actor.name, gate.actor.role, 'Quote sent to client', null);
-  return { ok: true };
+
+  const project = await getProjectById(projectId);
+  const subject = `Quote Ready for Review — ${project.code}`;
+  await simulateEmailNotification(
+    project.id, project.contactEmail, subject, gate.actor.name, gate.actor.role,
+  );
+  return { ok: true, emailNotification: { to: project.contactEmail, subject } };
 }
 
 /**
@@ -228,11 +235,11 @@ export async function generateInvoice(projectId) {
   if (gate.error) return gate;
 
   const { rows } = await query(
-    'SELECT code, status, invoice_number FROM projects WHERE id = $1',
+    'SELECT code, status, invoice_number, contact_email FROM projects WHERE id = $1',
     [projectId],
   );
   if (!rows.length) return { error: 'Project not found.' };
-  const { code, status, invoice_number } = rows[0];
+  const { code, status, invoice_number, contact_email } = rows[0];
 
   if (invoice_number) return { error: 'Invoice has already been generated.' };
   if (status !== 'complete' && status !== 'invoiced') {
@@ -255,10 +262,15 @@ export async function generateInvoice(projectId) {
     projectId, gate.actor.name, gate.actor.role,
     'Invoice generated', invoiceNumber,
   );
+
+  const subject = `Invoice ${invoiceNumber} — ${code}`;
+  await simulateEmailNotification(
+    projectId, contact_email, subject, gate.actor.name, gate.actor.role,
+  );
   revalidatePath('/projects');
   revalidatePath(`/projects/${projectId}`);
   revalidatePath(`/projects/${projectId}/invoice`);
-  return { ok: true };
+  return { ok: true, emailNotification: { to: contact_email, subject } };
 }
 
 /**

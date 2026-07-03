@@ -8,6 +8,7 @@ import StatusRail from '@/components/StatusRail';
 import { toPipelineStatus, pillStyle } from '@/app/portal/_components/statusConfig';
 import { deleteProject } from '../_actions/projectActions';
 import ConfirmModal from '@/components/ConfirmModal';
+import EmailToast from '@/components/EmailToast';
 import EditProjectModal from './EditProjectModal';
 import ShipmentsTab from './ShipmentsTab';
 import InstallTasksTab from './InstallTasksTab';
@@ -47,7 +48,13 @@ export default function ProjectDetailClient({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [deletePending, startDeleteTransition] = useTransition();
+  const [emailToast, setEmailToast] = useState(null);
   const isAdmin = role === 'admin';
+
+  function handleEmailSent(emailNotification) {
+    if (!emailNotification?.to) return;
+    setEmailToast(`Email notification sent to ${emailNotification.to}`);
+  }
 
   const totalWeight   = shipments.reduce((s, sh) => s + sh.qty * sh.weightPerUnitLbs, 0);
   const visibleTabs   = isAdmin ? ALL_TABS : ALL_TABS.filter((t) => !ADMIN_ONLY_TABS.has(t));
@@ -131,7 +138,7 @@ export default function ProjectDetailClient({
 
         {/* ── Invoice section (only when the project is billable) ────────── */}
         {isAdmin && (project.status === 'complete' || project.status === 'invoiced') && (
-          <InvoiceSection project={project} />
+          <InvoiceSection project={project} onEmailSent={handleEmailSent} />
         )}
 
         {/* ── Tab bar ────────────────────────────────────────────────────── */}
@@ -189,6 +196,7 @@ export default function ProjectDetailClient({
               rateCards={rateCards}
               suggestedRateCardId={suggestedRateCardId}
               defaultRateCardId={defaultRateCardId}
+              onEmailSent={handleEmailSent}
             />
           )}
           {activeTab === 'Notes' && (
@@ -221,6 +229,10 @@ export default function ProjectDetailClient({
             setDeleteError(null);
           }}
         />
+      )}
+
+      {emailToast && (
+        <EmailToast message={emailToast} onDismiss={() => setEmailToast(null)} />
       )}
     </div>
   );
