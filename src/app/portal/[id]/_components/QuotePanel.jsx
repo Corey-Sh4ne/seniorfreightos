@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { acceptQuote, denyQuote } from '../_actions/quoteActions';
 import EmailToast from '@/components/EmailToast';
 
@@ -33,7 +33,7 @@ function Breakdown({ q }) {
 }
 
 export default function QuotePanel({ project, clientName }) {
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
   const [emailToast, setEmailToast] = useState(null);
   const { status, quotedPrice } = project;
 
@@ -60,20 +60,26 @@ export default function QuotePanel({ project, clientName }) {
   // Only the 'quoted' state shows the interactive accept/deny panel.
   if (status !== 'quoted' || !quotedPrice) return null;
 
-  function handleAccept() {
+  async function handleAccept() {
     if (!window.confirm('Accept this quote? Your project will move forward.')) return;
-    startTransition(async () => {
-      const res = await acceptQuote(project.id, clientName);
-      if (res?.emailNotification) setEmailToast('Notification sent to your logistics team');
-    });
+    setEmailToast('Notification sent to your logistics team');
+    setPending(true);
+    try {
+      await acceptQuote(project.id, clientName);
+    } finally {
+      setPending(false);
+    }
   }
 
-  function handleDeny() {
+  async function handleDeny() {
     if (!window.confirm('Deny this quote? You can request a revised quote afterward.')) return;
-    startTransition(async () => {
-      const res = await denyQuote(project.id, clientName);
-      if (res?.emailNotification) setEmailToast('Notification sent to your logistics team');
-    });
+    setEmailToast('Notification sent to your logistics team');
+    setPending(true);
+    try {
+      await denyQuote(project.id, clientName);
+    } finally {
+      setPending(false);
+    }
   }
 
   return (

@@ -138,21 +138,20 @@ export default function PricingQuoteTab({
     if (!window.confirm(
       `Send this quote to ${project.clientName}? They will receive it on their portal for review.`,
     )) return;
+    onEmailSent?.({ to: project.contactEmail, subject: `Quote Ready for Review — ${project.code}` });
     setPending(true);
     try {
-      const res = await sendQuote(project.id, selectedCard.id, liveBreakdown);
-      if (res?.emailNotification?.to) onEmailSent?.(res.emailNotification);
-      console.log('sendQuote result:', JSON.stringify(res));
+      await sendQuote(project.id, selectedCard.id, liveBreakdown);
     } finally {
       setPending(false);
     }
   }
 
   async function handleResend() {
+    onEmailSent?.({ to: project.contactEmail, subject: `Quote Ready for Review — ${project.code}` });
     setPending(true);
     try {
-      const res = await resendQuote(project.id, selectedCard.id, liveBreakdown);
-      if (res?.emailNotification?.to) onEmailSent?.(res.emailNotification);
+      await resendQuote(project.id, selectedCard.id, liveBreakdown);
     } finally {
       setPending(false);
     }
