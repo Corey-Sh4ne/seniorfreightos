@@ -9,7 +9,7 @@ import ProjectsTable from './ProjectsTable';
 const INACTIVE_STATUSES = ['Quote', 'Installed', 'Delivered', 'quoted', 'complete', 'invoiced'];
 const DONE_STATUSES     = ['Installed', 'Delivered', 'complete', 'invoiced'];
 
-export default function DashboardClient({ projects, viewAs = 'admin' }) {
+export default function DashboardClient({ projects, viewAs = 'admin', analyticsSection = null }) {
   const [search,       setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [clientFilter, setClientFilter] = useState('All');
@@ -65,6 +65,7 @@ export default function DashboardClient({ projects, viewAs = 'admin' }) {
 
         <main className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           <StatCards stats={stats} />
+          {analyticsSection}
           <FilterBar
             search={search}             onSearch={setSearch}
             statusFilter={statusFilter} onStatusChange={setStatusFilter} statuses={uniqueStatuses}

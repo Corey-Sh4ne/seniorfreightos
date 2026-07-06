@@ -13,6 +13,7 @@ import { getCurrentRole } from '@/app/ops/_lib/auth';
 import { parseClientName } from './_lib/viewAsOptions';
 
 import DashboardClient   from './_components/DashboardClient';
+import AnalyticsSection  from './_components/AnalyticsSection';
 import ImpersonationView from './_components/ImpersonationView';
 import PortalClient      from './_components/PortalClient';
 import OpsClient         from '@/app/ops/_components/OpsClient';
@@ -58,5 +59,11 @@ export default async function DashboardPage() {
 
   // Default: normal admin dashboard.
   const projects = await getProjects();
-  return <DashboardClient projects={projects} viewAs="admin" />;
+  return (
+    <DashboardClient
+      projects={projects}
+      viewAs="admin"
+      analyticsSection={<AnalyticsSection />}
+    />
+  );
 }
