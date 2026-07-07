@@ -6,6 +6,20 @@ import ClientFormModal from './ClientFormModal';
 const AVATAR_BG = ['#EFF6FF', '#FDF4FF', '#ECFDF5'];
 const AVATAR_FG = ['#1D4ED8', '#7E22CE', '#065F46'];
 
+function getTierBadgeStyle(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('premium') || n.includes('white glove')) {
+    return { background: '#FEF3C7', color: '#92400E', border: '1px solid #F59E0B' };
+  }
+  if (n.includes('standard')) {
+    return { background: '#DBEAFE', color: '#1D4ED8', border: '1px solid #2563EB' };
+  }
+  if (n.includes('budget')) {
+    return { background: '#F3F4F6', color: '#4B5563', border: '1px solid #6B7280' };
+  }
+  return { background: '#F3F4F6', color: '#6B7280', border: '1px solid #E5E7EB' };
+}
+
 function LinkBadge({ linked }) {
   return linked ? (
     <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
@@ -18,7 +32,7 @@ function LinkBadge({ linked }) {
   );
 }
 
-export default function ClientsClient({ clients, rateCards, clerkUsers }) {
+export default function ClientsClient({ clients, rateCards, clerkUsers, projectCounts = {} }) {
   const [modal, setModal] = useState(null);
 
   const otherLinkedClerkIds = useMemo(
@@ -50,7 +64,7 @@ export default function ClientsClient({ clients, rateCards, clerkUsers }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50/80">
-                {['Company', 'Contact', 'Rate Card', 'Clerk Account', ''].map((col) => (
+                {['Company', 'Contact', 'Rate Card', 'Projects', 'Clerk Account', ''].map((col) => (
                   <th
                     key={col || 'actions'}
                     className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-zinc-400 whitespace-nowrap"
@@ -63,7 +77,7 @@ export default function ClientsClient({ clients, rateCards, clerkUsers }) {
             <tbody>
               {clients.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-sm text-zinc-400">
+                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-zinc-400">
                     No clients yet. Add your first client to get started.
                   </td>
                 </tr>
@@ -89,9 +103,30 @@ export default function ClientsClient({ clients, rateCards, clerkUsers }) {
                       {client.contactEmail && (
                         <div className="text-xs text-zinc-400">{client.contactEmail}</div>
                       )}
+                      <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '2px' }}>
+                        {client.contactPhone || ''}
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-zinc-600 whitespace-nowrap">
-                      {client.rateCardName ?? 'Default'}
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span
+                        style={{
+                          ...getTierBadgeStyle(client.rateCardName),
+                          borderRadius: '6px',
+                          padding: '3px 10px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {client.rateCardName || 'Default'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span style={{ fontWeight: 700, color: '#111827' }}>
+                        {projectCounts[client.name] || 0}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#9CA3AF', marginLeft: '4px' }}>
+                        projects
+                      </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <LinkBadge linked={Boolean(client.clerkUserId)} />

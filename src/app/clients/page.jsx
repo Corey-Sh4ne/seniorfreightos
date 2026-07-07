@@ -61,7 +61,7 @@ async function listClientUsers() {
 export default async function ClientsPage() {
   await auth();
 
-  const [clientsRes, rateCardsRes, clerkUsers] = await Promise.all([
+  const [clientsRes, rateCardsRes, projectCountsRes, clerkUsers] = await Promise.all([
     query(
       `SELECT c.id, c.name, c.contact_name, c.contact_email, c.contact_phone,
               c.clerk_user_id, c.rate_card_id, rc.name AS rate_card_name
@@ -70,8 +70,14 @@ export default async function ClientsPage() {
          ORDER BY c.name ASC`,
     ),
     query('SELECT id, name, is_default FROM rate_cards ORDER BY is_default DESC, name ASC'),
+    query('SELECT client_name, COUNT(*) as count FROM projects GROUP BY client_name'),
     listClientUsers(),
   ]);
+
+  const projectCounts = {};
+  projectCountsRes.rows.forEach((r) => {
+    projectCounts[r.client_name] = parseInt(r.count);
+  });
 
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-50">
@@ -87,6 +93,7 @@ export default async function ClientsPage() {
               isDefault: r.is_default,
             }))}
             clerkUsers={clerkUsers}
+            projectCounts={projectCounts}
           />
         </main>
       </div>
