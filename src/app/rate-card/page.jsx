@@ -37,14 +37,12 @@ export default async function RateCardPage() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto px-6 py-6">
-          <div className="mx-auto max-w-4xl">
-            <RateCardClient
-              rateCards={rateCards}
-              assignments={assignments}
-              clientNames={clientNames}
-              defaultRates={DEFAULT_RATE_CARD}
-            />
-          </div>
+          <RateCardClient
+            rateCards={rateCards}
+            assignments={assignments}
+            clientNames={clientNames}
+            defaultRates={DEFAULT_RATE_CARD}
+          />
         </main>
       </div>
     </div>
