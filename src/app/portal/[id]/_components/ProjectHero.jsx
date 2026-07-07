@@ -2,7 +2,7 @@ import PortalStatusRail from '@/app/portal/_components/PortalStatusRail';
 import CardProgressBar from '@/app/portal/_components/CardProgressBar';
 import StatusPill from '@/app/portal/_components/StatusPill';
 import StatCell from '@/app/portal/_components/StatCell';
-import { borderAccent, toPipelineStatus, stagesComplete } from '@/app/portal/_components/statusConfig';
+import { toPipelineStatus, stagesComplete } from '@/app/portal/_components/statusConfig';
 import { PIPELINE_STATUSES } from '@/utils/statusPipeline';
 import QuotePanel from './QuotePanel';
 
@@ -18,7 +18,15 @@ export default function ProjectHero({ project, clientName }) {
   return (
     <>
     <article
-      className={`bg-white rounded-xl border border-zinc-200 border-l-4 overflow-hidden ${borderAccent(project.status)} shadow-sm`}
+      style={{
+        background: 'white',
+        border: '1px solid #E5E7EB',
+        borderRadius: '12px',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+        marginBottom: '16px',
+        overflow: 'hidden',
+        borderLeft: '4px solid #2563EB',
+      }}
     >
       <CardProgressBar status={project.status} />
 

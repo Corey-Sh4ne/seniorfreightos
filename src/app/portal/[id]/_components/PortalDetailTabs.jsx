@@ -18,7 +18,7 @@ export default function PortalDetailTabs({ shipments, installTasks }) {
   };
 
   return (
-    <div>
+    <div style={{ padding: '0 24px 24px 24px' }}>
       <div className="flex border-b border-zinc-200 mb-6">
         {TABS.map((tab) => (
           <button

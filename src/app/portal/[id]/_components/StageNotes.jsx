@@ -19,7 +19,16 @@ export default function StageNotes({ stageNotes = {} }) {
   if (entries.length === 0) return null;
 
   return (
-    <section className="bg-white rounded-xl border border-zinc-200 p-5 sm:p-6 shadow-sm">
+    <section
+      style={{
+        background: 'white',
+        border: '1px solid #E5E7EB',
+        borderRadius: '12px',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+        padding: '20px 24px',
+        marginBottom: '16px',
+      }}
+    >
       <div className="mb-4">
         <h2 className="text-sm font-semibold text-zinc-900">
           Updates from your logistics team

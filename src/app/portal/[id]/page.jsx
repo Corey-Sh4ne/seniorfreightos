@@ -65,37 +65,89 @@ export default async function PortalProjectPage({ params }) {
   ]);
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="bg-white border-b border-zinc-200 px-4 sm:px-6 py-4 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.12em] leading-none">
-                SeniorFreightOS
-              </p>
-              <h1 className="text-base font-semibold text-zinc-900 leading-tight mt-0.5">Client Portal</h1>
-            </div>
-          </div>
-          <Link
-            href={returnTo}
-            className="text-sm font-medium text-zinc-500 hover:text-blue-600 transition-colors"
+    <div style={{ background: '#F3F4F6', minHeight: '100vh' }}>
+      <header
+        style={{
+          background: '#1F3864',
+          padding: '16px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: 'rgba(255,255,255,0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            ← My Projects
-          </Link>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <p
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.6)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                lineHeight: 1,
+              }}
+            >
+              SENIORFREIGHTOS
+            </p>
+            <h1
+              style={{
+                fontSize: '20px',
+                fontWeight: 700,
+                color: 'white',
+                lineHeight: 1.2,
+                marginTop: '4px',
+              }}
+            >
+              Client Portal
+            </h1>
+          </div>
         </div>
+        <Link
+          href={returnTo}
+          style={{
+            color: 'rgba(255,255,255,0.7)',
+            fontSize: '13px',
+            fontWeight: 500,
+            textDecoration: 'none',
+          }}
+        >
+          ← My Projects
+        </Link>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <main style={{ maxWidth: '760px', margin: '0 auto', padding: '24px' }}>
         <ProjectHero project={project} clientName={clientName} />
 
         <StageNotes stageNotes={project.stageNotes} />
 
-        <section className="bg-white rounded-xl border border-zinc-200 p-5 sm:p-6 shadow-sm">
+        <section
+          style={{
+            background: 'white',
+            border: '1px solid #E5E7EB',
+            borderRadius: '12px',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+            overflow: 'hidden',
+          }}
+        >
           <PortalDetailTabs shipments={shipments} installTasks={installTasks} />
         </section>
       </main>
