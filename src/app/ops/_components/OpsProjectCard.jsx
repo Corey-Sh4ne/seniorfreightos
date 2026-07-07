@@ -43,8 +43,23 @@ export default function OpsProjectCard({ project, completed = false }) {
       </div>
 
       {/* Pipeline rail */}
-      <div className="px-5 py-4 w-full overflow-x-auto">
-        <StatusRail currentStatus={toPipelineStatus(project.status)} />
+      <div style={{ padding: '16px 20px' }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          width: '100%',
+          boxSizing: 'border-box',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            padding: '16px 32px',
+            overflowX: 'auto',
+          }}>
+            <StatusRail currentStatus={toPipelineStatus(project.status)} />
+          </div>
+        </div>
       </div>
 
       {/* Stage-based body: locked summaries + the single active stage */}

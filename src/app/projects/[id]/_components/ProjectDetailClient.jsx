@@ -25,13 +25,16 @@ function StatCard({ label, value, danger, isLast }) {
   return (
     <div
       style={{
-        paddingRight: isLast ? '0' : '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minWidth: '100px',
+        padding: '0 20px',
         borderRight: isLast ? 'none' : '1px solid #F3F4F6',
-        minWidth: '120px',
       }}
     >
-      <p style={{fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap'}}>{label}</p>
-      <p style={{fontSize: '20px', fontWeight: 700, marginTop: '4px', color: danger ? '#DC2626' : '#111827'}}>{value}</p>
+      <p style={{ fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>{label}</p>
+      <p style={{ fontSize: '22px', fontWeight: 700, color: danger ? '#DC2626' : '#111827' }}>{value}</p>
     </div>
   );
 }
@@ -95,45 +98,61 @@ export default function ProjectDetailClient({
       <div className="flex-1 flex flex-col min-w-0 w-full overflow-hidden" style={{background: '#F3F4F6'}}>
         {/* ── Top header bar ─────────────────────────────────────────────── */}
         <header
-          className="bg-white border-b border-gray-200 h-14 flex items-center gap-3 shrink-0"
-          style={{paddingLeft: '24px', paddingRight: '24px'}}
+          style={{
+            background: 'white',
+            borderBottom: '1px solid #E5E7EB',
+            padding: '0 24px',
+            height: '56px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexShrink: 0,
+          }}
         >
-          <Link
-            href="/dashboard"
-            className="text-blue-600 hover:text-blue-700 text-xs font-semibold whitespace-nowrap shrink-0"
-          >
-            ← All Projects
-          </Link>
-          <h1 className="text-sm truncate flex-1">
-            <span className="text-gray-400">&nbsp;·&nbsp;</span>
-            <span className="font-semibold text-gray-900">{project.code}</span>
-            <span className="text-gray-400">&nbsp;·&nbsp;</span>
-            <span className="text-gray-500">{project.clientName}</span>
-          </h1>
-          <span
-            className={`shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${pillStyle(project.status)}`}
-          >
-            <span className="text-[8px] leading-none">●</span>
-            {statusLabel}
-          </span>
-          {isAdmin && (
-            <>
-              <button
-                type="button"
-                onClick={() => setShowEdit(true)}
-                className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
-              >
-                Edit Project
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="shrink-0 text-sm text-gray-400 hover:text-red-500 transition-colors"
-              >
-                Delete Project
-              </button>
-            </>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+            <Link
+              href="/dashboard"
+              className="text-blue-600 hover:text-blue-700"
+              style={{ fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}
+            >
+              ← All Projects
+            </Link>
+            <h1 style={{ display: 'flex', alignItems: 'center', fontSize: '14px', minWidth: 0, overflow: 'hidden' }}>
+              <span style={{ background: '#1D4ED8', color: 'white', borderRadius: '6px', padding: '2px 8px', fontSize: '13px', fontWeight: 700, marginRight: '10px' }}>{project.code}</span>
+              <span style={{ fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.clientName}</span>
+              <span style={{ color: '#9CA3AF', margin: '0 8px' }}>·</span>
+              <span style={{ color: '#6B7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.facilityName}</span>
+            </h1>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+            <span
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${pillStyle(project.status)}`}
+              style={{ flexShrink: 0 }}
+            >
+              <span className="text-[8px] leading-none">●</span>
+              {statusLabel}
+            </span>
+            {isAdmin && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowEdit(true)}
+                  className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+                  style={{ flexShrink: 0 }}
+                >
+                  Edit Project
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+                  style={{ flexShrink: 0 }}
+                >
+                  Delete Project
+                </button>
+              </>
+            )}
+          </div>
         </header>
 
         {/* ── Scrollable content area ────────────────────────────────────── */}
@@ -148,20 +167,22 @@ export default function ProjectDetailClient({
           }}
         >
           {/* ── Status rail card ─────────────────────────────────────────── */}
-          <div
-            style={{
-              background: 'white',
-              border: '1px solid #E5E7EB',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-              padding: '24px 48px',
-              marginBottom: '16px',
-              width: '100%',
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            border: '1px solid #E5E7EB',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            marginBottom: '16px',
+            width: '100%',
+            boxSizing: 'border-box',
+            overflow: 'visible',
+          }}>
+            <div style={{
+              padding: '24px 32px',
               overflowX: 'auto',
-              boxSizing: 'border-box',
-            }}
-          >
-            <StatusRail currentStatus={toPipelineStatus(project.status)} />
+            }}>
+              <StatusRail currentStatus={toPipelineStatus(project.status)} />
+            </div>
           </div>
 
           {/* ── Stat cards row ───────────────────────────────────────────── */}
@@ -170,11 +191,10 @@ export default function ProjectDetailClient({
               background: 'white',
               border: '1px solid #E5E7EB',
               borderRadius: '12px',
-              padding: '16px 24px',
+              padding: '16px 4px',
               marginBottom: '16px',
               display: 'flex',
-              gap: '24px',
-              flexWrap: 'wrap',
+              alignItems: 'center',
             }}
           >
             {statCards.map((sc, i) => (
@@ -203,22 +223,34 @@ export default function ProjectDetailClient({
             }}
           >
             {/* Tab bar */}
-            <div className="border-b border-gray-200 px-4 flex">
+            <div
+              style={{
+                background: '#F9FAFB',
+                borderBottom: '1px solid #E5E7EB',
+                padding: '0 24px',
+                display: 'flex',
+              }}
+            >
               {visibleTabs.map((tab) => {
                 const Icon = TAB_ICONS[tab];
                 const locked = ADMIN_ONLY_TABS.has(tab);
+                const isActive = activeTab === tab;
                 return (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={[
-                      'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
-                      activeTab === tab
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-zinc-500 hover:text-zinc-900',
-                    ].join(' ')}
+                    className="transition-colors"
+                    style={{
+                      padding: '12px 16px',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      borderBottom: isActive ? '2px solid #1D4ED8' : '2px solid transparent',
+                      color: isActive ? '#1D4ED8' : '#6B7280',
+                      background: 'transparent',
+                      marginBottom: '-1px',
+                    }}
                   >
-                    <span className="flex items-center gap-1.5">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {locked && <Lock size={14} />}
                       {Icon && <Icon size={14} />}
                       {tab}
@@ -227,7 +259,17 @@ export default function ProjectDetailClient({
                 );
               })}
               {!isAdmin && (
-                <span className="ml-auto flex items-center text-xs text-amber-600 font-medium pr-1">
+                <span
+                  style={{
+                    marginLeft: 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: '12px',
+                    color: '#D97706',
+                    fontWeight: 500,
+                    paddingRight: '4px',
+                  }}
+                >
                   Admin-only tab hidden
                 </span>
               )}

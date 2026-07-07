@@ -43,10 +43,10 @@ export default function InvoiceSection({ project, onEmailSent }) {
     return (
       <div
         style={{
-          background: 'white',
-          border: '1px solid #E5E7EB',
+          background: '#EFF6FF',
+          border: '1px solid #BFDBFE',
           borderRadius: '12px',
-          padding: '16px 24px',
+          padding: '14px 20px',
           marginBottom: '16px',
           display: 'flex',
           alignItems: 'center',
@@ -84,10 +84,10 @@ export default function InvoiceSection({ project, onEmailSent }) {
   return (
     <div
       style={{
-        background: 'white',
-        border: '1px solid #E5E7EB',
+        background: '#EFF6FF',
+        border: '1px solid #BFDBFE',
         borderRadius: '12px',
-        padding: '16px 24px',
+        padding: '14px 20px',
         marginBottom: '16px',
         display: 'flex',
         alignItems: 'center',
@@ -98,7 +98,7 @@ export default function InvoiceSection({ project, onEmailSent }) {
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-semibold text-zinc-900">{invoiceNumber}</p>
+          <p style={{ fontSize: '14px', fontWeight: 700, color: '#1D4ED8' }}>{invoiceNumber}</p>
           <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${pillClass}`}>
             <span className="text-[8px] leading-none">●</span>
             {statusLabel}
