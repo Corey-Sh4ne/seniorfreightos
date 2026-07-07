@@ -1,4 +1,6 @@
-export default function PortalHeader({ projectCount }) {
+import Link from 'next/link';
+
+export default function PortalHeader({ projectCount, backHref, backLabel = '← My Projects' }) {
   return (
     <header
       style={{
@@ -60,21 +62,35 @@ export default function PortalHeader({ projectCount }) {
           </div>
         </div>
 
-        {/* Project count badge */}
-        {projectCount > 0 && (
-          <span
+        {/* Right side: back link takes precedence when a detail page provides one */}
+        {backHref ? (
+          <Link
+            href={backHref}
             style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              background: 'rgba(255,255,255,0.12)',
-              color: 'white',
-              border: '1px solid rgba(255,255,255,0.2)',
-              padding: '4px 12px',
-              borderRadius: '9999px',
+              color: 'rgba(255,255,255,0.7)',
+              fontSize: '13px',
+              fontWeight: 500,
+              textDecoration: 'none',
             }}
           >
-            {projectCount} {projectCount === 1 ? 'project' : 'projects'}
-          </span>
+            {backLabel}
+          </Link>
+        ) : (
+          projectCount > 0 && (
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                background: 'rgba(255,255,255,0.12)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.2)',
+                padding: '4px 12px',
+                borderRadius: '9999px',
+              }}
+            >
+              {projectCount} {projectCount === 1 ? 'project' : 'projects'}
+            </span>
+          )
         )}
       </div>
     </header>

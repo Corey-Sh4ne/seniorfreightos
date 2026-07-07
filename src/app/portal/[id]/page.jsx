@@ -10,10 +10,10 @@ export const dynamic = 'force-dynamic';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
 import ProjectHero from './_components/ProjectHero';
 import PortalDetailTabs from './_components/PortalDetailTabs';
 import StageNotes from './_components/StageNotes';
+import PortalHeader from '@/app/portal/_components/PortalHeader';
 import { parseClientName } from '@/app/dashboard/_lib/viewAsOptions';
 import {
   getPortalProjectById,
@@ -66,75 +66,9 @@ export default async function PortalProjectPage({ params }) {
 
   return (
     <div style={{ background: '#F3F4F6', minHeight: '100vh' }}>
-      <header
-        style={{
-          background: '#1F3864',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              background: 'rgba(255,255,255,0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z" />
-            </svg>
-          </div>
-          <div>
-            <p
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                color: 'rgba(255,255,255,0.6)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                lineHeight: 1,
-              }}
-            >
-              SENIORFREIGHTOS
-            </p>
-            <h1
-              style={{
-                fontSize: '20px',
-                fontWeight: 700,
-                color: 'white',
-                lineHeight: 1.2,
-                marginTop: '4px',
-              }}
-            >
-              Client Portal
-            </h1>
-          </div>
-        </div>
-        <Link
-          href={returnTo}
-          style={{
-            color: 'rgba(255,255,255,0.7)',
-            fontSize: '13px',
-            fontWeight: 500,
-            textDecoration: 'none',
-          }}
-        >
-          ← My Projects
-        </Link>
-      </header>
+      <PortalHeader backHref={returnTo} />
 
-      <main style={{ maxWidth: '760px', margin: '0 auto', padding: '24px' }}>
+      <main style={{ maxWidth: '960px', margin: '0 auto', padding: '24px' }}>
         <ProjectHero project={project} clientName={clientName} />
 
         <StageNotes stageNotes={project.stageNotes} />
