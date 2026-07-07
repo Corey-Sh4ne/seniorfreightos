@@ -12,13 +12,20 @@ import {
 import { ShipmentRow, TaskRow } from './OpsChecklistRows';
 import StageConfirmModal from './StageConfirmModal';
 
-const PRIMARY_BTN =
-  'rounded-md bg-zinc-900 px-3.5 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50';
-const CONFIRM_BTN =
-  'rounded-md bg-emerald-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50';
+const PRIMARY_BTN_STYLE = {
+  background: '#2563EB',
+  color: 'white',
+  borderRadius: '8px',
+  padding: '8px 20px',
+  fontSize: '13px',
+  fontWeight: 600,
+  border: 'none',
+  cursor: 'pointer',
+};
 
 /** A button that optionally gates its action behind a window.confirm prompt. */
-export function ActionButton({ label, prompt, onAction, pending, run, className = CONFIRM_BTN }) {
+export function ActionButton({ label, prompt, onAction, pending, run, className, style }) {
+  const useStyle = style || (className ? null : PRIMARY_BTN_STYLE);
   return (
     <button
       type="button"
@@ -27,6 +34,7 @@ export function ActionButton({ label, prompt, onAction, pending, run, className 
         if (!prompt || window.confirm(prompt)) run(onAction);
       }}
       className={className}
+      style={useStyle || undefined}
     >
       {label}
     </button>
@@ -38,7 +46,7 @@ export function ActionButton({ label, prompt, onAction, pending, run, className 
  * inside the caller's transition and closes the modal.
  */
 function StageConfirmButton({
-  label, className = CONFIRM_BTN, projectId, action,
+  label, className, style = PRIMARY_BTN_STYLE, projectId, action,
   modalTitle, modalMessage, notePlaceholder, confirmLabel,
   pending, run,
 }) {
@@ -56,6 +64,7 @@ function StageConfirmButton({
         disabled={pending}
         onClick={() => setOpen(true)}
         className={className}
+        style={className ? undefined : style}
       >
         {label}
       </button>
@@ -171,7 +180,6 @@ export function ActiveContent({ project, pending, run, allReceived, allComplete 
             onAction={() => confirmStartReceiving(id)}
             pending={pending}
             run={run}
-            className={PRIMARY_BTN}
           />
         </div>
       </ActiveSection>

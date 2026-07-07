@@ -17,22 +17,38 @@ export default function OpsClient({ projects, role }) {
   const completed = projects.filter((p) => COMPLETED_STATUSES.has(p.status));
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto max-w-5xl px-6 py-5 flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-semibold text-zinc-900">Order Management</h1>
-            <p className="mt-0.5 text-sm text-zinc-500">
-              {active.length} active {active.length === 1 ? 'project' : 'projects'} in the pipeline
-            </p>
-          </div>
-          {role && (
-            <span className="shrink-0 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
-              {ROLE_LABELS[role] ?? role}
-            </span>
-          )}
+    <div className="min-h-screen" style={{ background: '#F3F4F6' }}>
+      <div
+        style={{
+          background: '#1F3864',
+          padding: '24px 32px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'white', margin: 0 }}>
+            Order Management
+          </h1>
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>
+            {active.length} active {active.length === 1 ? 'project' : 'projects'} in the pipeline
+          </p>
         </div>
-      </header>
+        <span
+          style={{
+            background: 'rgba(255,255,255,0.15)',
+            color: 'white',
+            borderRadius: '8px',
+            padding: '6px 14px',
+            fontSize: '13px',
+            fontWeight: 600,
+          }}
+        >
+          {ROLE_LABELS[role] ?? role ?? 'Dispatcher'}
+        </span>
+      </div>
 
       <main className="mx-auto max-w-5xl px-6 py-6">
         {active.length === 0 ? (
@@ -40,7 +56,7 @@ export default function OpsClient({ projects, role }) {
             <p className="text-sm text-zinc-500">No active projects right now.</p>
           </div>
         ) : (
-          <ul className="space-y-5">
+          <ul>
             {active.map((project) => (
               <li key={project.id}>
                 <OpsProjectCard project={project} />
@@ -50,16 +66,26 @@ export default function OpsClient({ projects, role }) {
         )}
 
         {completed.length > 0 && (
-          <section className="mt-10 rounded-xl bg-zinc-100 p-5">
-            <div className="mb-4 flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          <section>
+            <div className="flex items-baseline justify-between">
+              <h2
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: '#9CA3AF',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: '12px',
+                  marginTop: '24px',
+                }}
+              >
                 Completed Projects
               </h2>
               <span className="text-xs text-zinc-400">
                 {completed.length} {completed.length === 1 ? 'project' : 'projects'}
               </span>
             </div>
-            <ul className="space-y-5">
+            <ul>
               {completed.map((project) => (
                 <li key={project.id}>
                   <OpsProjectCard project={project} completed />

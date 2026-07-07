@@ -2,18 +2,126 @@
 
 import { useTransition } from 'react';
 import StatusRail from '@/components/StatusRail';
-import StatusPill from '@/app/portal/_components/StatusPill';
-import { toPipelineStatus, borderAccent } from '@/app/portal/_components/statusConfig';
-import { resetProject } from '../_actions/opsActions';
+import StatusBadge from '@/components/StatusBadge';
+import { toPipelineStatus } from '@/app/portal/_components/statusConfig';
+import { resetProject, resetToInstalling } from '../_actions/opsActions';
 import { StageFlow } from './OpsProjectCardParts';
 
 const COMPLETED_STATUSES = new Set(['complete', 'invoiced']);
+
+function getBorderColor(status) {
+  switch (status) {
+    case 'awarded': return '#8B5CF6';
+    case 'receiving': return '#F59E0B';
+    case 'staging': return '#EA580C';
+    case 'scheduled': return '#06B6D4';
+    case 'delivered': return '#14B8A6';
+    case 'installing': return '#6366F1';
+    case 'complete': return '#10B981';
+    default: return '#2563EB';
+  }
+}
+
+function getHeaderTint(status) {
+  switch (status) {
+    case 'awarded': return '#FAF5FF';
+    case 'receiving': return '#FFFBEB';
+    case 'installing': return '#EEF2FF';
+    default: return '#F8FAFC';
+  }
+}
+
+const COMPACT_RESET_BTN = {
+  padding: '4px 10px',
+  fontSize: '12px',
+  fontWeight: 500,
+  borderRadius: '6px',
+  border: '1px solid #D4D4D8',
+  background: 'white',
+  color: '#52525B',
+  cursor: 'pointer',
+};
+
+const COMPACT_RESET_PROJECT_BTN = {
+  border: '1px solid #E5E7EB',
+  borderRadius: '6px',
+  padding: '4px 10px',
+  fontSize: '12px',
+  fontWeight: 500,
+  color: '#6B7280',
+  background: 'white',
+  cursor: 'pointer',
+};
 
 export default function OpsProjectCard({ project, completed = false }) {
   const [pending, startTransition] = useTransition();
   const run = (fn) => startTransition(() => { fn(); });
 
   const isComplete = completed || COMPLETED_STATUSES.has(project.status);
+
+  if (isComplete) {
+    return (
+      <div
+        style={{
+          background: 'white',
+          border: '1px solid #E5E7EB',
+          borderLeft: '4px solid #10B981',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '12px',
+          opacity: 0.8,
+        }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span
+                className="font-mono"
+                style={{ fontSize: '12px', fontWeight: 700, color: '#6B7280' }}
+              >
+                {project.code}
+              </span>
+              <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                Complete ✓
+              </span>
+            </div>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: '#374151', marginTop: '6px' }}>
+              {project.clientName}
+            </p>
+            <p style={{ fontSize: '13px', color: '#6B7280', marginTop: '2px' }}>
+              {project.facilityName}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                if (window.confirm('Reset to Installing? This reopens the install task checklist.')) {
+                  run(() => resetToInstalling(project.id));
+                }
+              }}
+              style={COMPACT_RESET_BTN}
+            >
+              Reset to Installing
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                if (window.confirm('Reset this project to prospect? This will clear all progress, the accepted quote, and invoice data so the full demo can be run again.')) {
+                  run(() => resetProject(project.id));
+                }
+              }}
+              style={COMPACT_RESET_PROJECT_BTN}
+            >
+              Reset Project
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const receivedCount = project.shipments.filter((s) => s.received).length;
   const completedCount = project.installTasks.filter((t) => t.completed).length;
@@ -23,23 +131,44 @@ export default function OpsProjectCard({ project, completed = false }) {
     project.installTasks.length > 0 && completedCount === project.installTasks.length;
 
   return (
-    <div className={`rounded-lg border border-l-4 border-zinc-200 bg-white ${borderAccent(project.status)}`}>
+    <div
+      style={{
+        background: 'white',
+        border: '1px solid #E5E7EB',
+        borderRadius: '12px',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+        marginBottom: '16px',
+        overflow: 'hidden',
+        borderLeft: `4px solid ${getBorderColor(project.status)}`,
+      }}
+    >
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-semibold text-zinc-900">{project.code}</span>
-            {isComplete ? (
-              <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                Complete ✓
-              </span>
-            ) : (
-              <StatusPill status={project.status} />
-            )}
-          </div>
-          <p className="mt-1 text-sm text-zinc-700">{project.clientName}</p>
-          <p className="text-xs text-zinc-400">{project.facilityName}</p>
+      <div style={{ background: getHeaderTint(project.status), padding: '16px 20px 12px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '4px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              color: '#6B7280',
+              letterSpacing: '0.08em',
+              fontFamily: 'monospace',
+            }}
+          >
+            {project.code}
+          </span>
+          <StatusBadge status={project.status} />
         </div>
+        <p style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: '4px 0 2px' }}>
+          {project.clientName}
+        </p>
+        <p style={{ fontSize: '13px', color: '#6B7280' }}>{project.facilityName}</p>
       </div>
 
       {/* Pipeline rail */}
@@ -54,7 +183,7 @@ export default function OpsProjectCard({ project, completed = false }) {
           overflow: 'hidden',
         }}>
           <div style={{
-            padding: '16px 32px',
+            padding: '12px 24px',
             overflowX: 'auto',
           }}>
             <StatusRail currentStatus={toPipelineStatus(project.status)} />
@@ -62,32 +191,16 @@ export default function OpsProjectCard({ project, completed = false }) {
         </div>
       </div>
 
-      {/* Stage-based body: locked summaries + the single active stage */}
-      <StageFlow
-        project={project}
-        pending={pending}
-        run={run}
-        allReceived={allReceived}
-        allComplete={allComplete}
-      />
-
-      {/* Full reset is only offered once the project is finished */}
-      {isComplete && (
-        <div className="flex justify-end border-t border-zinc-100 px-5 py-3">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => {
-              if (window.confirm('Reset this project to prospect? This will clear all progress, the accepted quote, and invoice data so the full demo can be run again.')) {
-                run(() => resetProject(project.id));
-              }
-            }}
-            className="rounded-md border border-red-200 bg-red-50 px-3.5 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
-          >
-            Reset Project
-          </button>
-        </div>
-      )}
+      {/* Action section divider */}
+      <div style={{ borderTop: '1px solid #F3F4F6', marginTop: '8px', paddingTop: '16px' }}>
+        <StageFlow
+          project={project}
+          pending={pending}
+          run={run}
+          allReceived={allReceived}
+          allComplete={allComplete}
+        />
+      </div>
     </div>
   );
 }
