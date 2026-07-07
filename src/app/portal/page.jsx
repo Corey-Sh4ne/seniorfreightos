@@ -45,7 +45,16 @@ export default async function PortalPage() {
         {quotes.length > 0 && (
           <section className="space-y-3">
             <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+              <h2
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#6B7280',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  marginBottom: '12px',
+                }}
+              >
                 Pending Quotes
               </h2>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -61,7 +70,16 @@ export default async function PortalPage() {
         )}
 
         <section className="space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          <h2
+            style={{
+              fontSize: '13px',
+              fontWeight: 700,
+              color: '#6B7280',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              marginBottom: '12px',
+            }}
+          >
             Your Projects
           </h2>
           {projects.length === 0 ? (

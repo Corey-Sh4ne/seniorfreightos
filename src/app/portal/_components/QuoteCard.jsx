@@ -10,47 +10,105 @@ function formatDate(val) {
 /** Compact card for a pending (or denied) quote awaiting a client response. */
 export default function QuoteCard({ quote }) {
   const denied = quote.status === 'denied';
+  const accentColor = denied ? '#DC2626' : '#F59E0B';
 
   return (
-    <Link href={`/portal/quotes/${quote.id}`} className="block group">
-      <article
-        className={`
-          bg-white rounded-lg border border-zinc-200 border-l-4
-          ${denied ? 'border-l-red-400' : 'border-l-amber-400'}
-          shadow-sm transition-all duration-150
-          group-hover:shadow-md group-hover:-translate-y-0.5
-        `}
-      >
-        <div className="p-4 flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-[10px] font-mono font-medium text-zinc-400 tracking-widest uppercase mb-0.5">
-              {quote.code}
-            </p>
-            <h3 className="text-base font-bold text-zinc-900 leading-snug truncate">
-              {quote.facilityName}
-            </h3>
-            <p className="text-xs text-zinc-400 mt-0.5">Sent {formatDate(quote.updatedAt)}</p>
-          </div>
+    <article
+      style={{
+        background: 'white',
+        border: `2px solid ${accentColor}`,
+        borderLeft: `6px solid ${accentColor}`,
+        borderRadius: '12px',
+        padding: '20px 24px',
+        marginBottom: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '16px',
+      }}
+    >
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <p
+          style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            color: '#9CA3AF',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+            marginBottom: '4px',
+          }}
+        >
+          {quote.code}
+        </p>
+        <h3
+          style={{
+            fontSize: '18px',
+            fontWeight: 700,
+            color: '#111827',
+            lineHeight: 1.3,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {quote.facilityName}
+        </h3>
+        <p style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '4px' }}>
+          Sent {formatDate(quote.updatedAt)}
+        </p>
+      </div>
 
-          <div className="flex flex-col items-end gap-1.5 shrink-0">
-            <span
-              className={`text-[11px] font-semibold border px-2.5 py-0.5 rounded-full whitespace-nowrap ${
-                denied
-                  ? 'bg-red-50 text-red-700 border-red-100'
-                  : 'bg-amber-50 text-amber-700 border-amber-100'
-              }`}
-            >
-              {denied ? 'Quote Denied' : 'Quote Pending'}
-            </span>
-            {quote.total != null && (
-              <span className="text-lg font-bold text-zinc-900">{USD.format(quote.total)}</span>
-            )}
-            <span className="text-[11px] font-medium text-zinc-400 group-hover:text-blue-500 transition-colors">
-              Review quote →
-            </span>
-          </div>
-        </div>
-      </article>
-    </Link>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px', flexShrink: 0 }}>
+        <span
+          style={
+            denied
+              ? {
+                  background: '#FEE2E2',
+                  color: '#991B1B',
+                  border: '1px solid #DC2626',
+                  borderRadius: '6px',
+                  padding: '3px 10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                }
+              : {
+                  background: '#FEF3C7',
+                  color: '#92400E',
+                  border: '1px solid #F59E0B',
+                  borderRadius: '6px',
+                  padding: '3px 10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                }
+          }
+        >
+          {denied ? 'Quote Denied' : 'Quote Pending'}
+        </span>
+        {quote.total != null && (
+          <span style={{ fontSize: '28px', fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+            {USD.format(quote.total)}
+          </span>
+        )}
+        <Link
+          href={`/portal/quotes/${quote.id}`}
+          style={{
+            background: '#1F3864',
+            color: 'white',
+            borderRadius: '8px',
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            textDecoration: 'none',
+            display: 'inline-block',
+          }}
+        >
+          Review quote →
+        </Link>
+      </div>
+    </article>
   );
 }

@@ -18,12 +18,15 @@ export default function ProjectCard({ project, shipments }) {
   return (
     <Link href={`/portal/${project.id}`} className="block group">
       <article
-        className={`
-          bg-white rounded-xl border border-zinc-200 border-l-4 overflow-hidden
-          ${borderAccent(project.status)}
-          shadow-sm transition-all duration-150
-          group-hover:shadow-lg group-hover:-translate-y-0.5
-        `}
+        className={`border-l-4 ${borderAccent(project.status)} transition-all duration-150 group-hover:-translate-y-0.5 group-hover:shadow-lg`}
+        style={{
+          background: 'white',
+          border: '1px solid #E5E7EB',
+          borderRadius: '12px',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+          marginBottom: '16px',
+          overflow: 'hidden',
+        }}
       >
         <CardProgressBar status={project.status} />
 
@@ -72,8 +75,19 @@ export default function ProjectCard({ project, shipments }) {
             ) : (
               <span />
             )}
-            <span className="shrink-0 text-xs font-medium text-zinc-400 group-hover:text-blue-500 transition-colors">
-              View details →
+            <span
+              className="shrink-0"
+              style={{
+                color: '#2563EB',
+                fontWeight: 600,
+                fontSize: '13px',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              View Project →
             </span>
           </div>
         </div>
