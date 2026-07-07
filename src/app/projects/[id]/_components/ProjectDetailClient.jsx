@@ -21,9 +21,15 @@ const DATE_FMT = new Intl.DateTimeFormat('en-US', {
   month: 'short', day: 'numeric', timeZone: 'UTC',
 });
 
-function StatCard({ label, value, danger }) {
+function StatCard({ label, value, danger, isLast }) {
   return (
-    <div style={{background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '12px', padding: '16px', minWidth: '120px'}}>
+    <div
+      style={{
+        paddingRight: isLast ? '0' : '24px',
+        borderRight: isLast ? 'none' : '1px solid #F3F4F6',
+        minWidth: '120px',
+      }}
+    >
       <p style={{fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap'}}>{label}</p>
       <p style={{fontSize: '20px', fontWeight: 700, marginTop: '4px', color: danger ? '#DC2626' : '#111827'}}>{value}</p>
     </div>
@@ -63,6 +69,14 @@ export default function ProjectDetailClient({
     ? project.status.charAt(0).toUpperCase() + project.status.slice(1)
     : '—';
 
+  const statCards = [
+    { label: 'Total Weight',   value: `${totalWeight.toLocaleString()} lb` },
+    { label: 'Miles from Hub', value: `${project.milesFromHub} mi` },
+    { label: 'Storage',        value: `${project.storageDays} days` },
+    { label: 'Rush Delivery',  value: project.rushDelivery ? 'Yes' : 'No', danger: project.rushDelivery },
+    { label: 'Start',          value: startDateStr },
+  ];
+
   function handleDelete() {
     setDeleteError(null);
     startDeleteTransition(async () => {
@@ -78,17 +92,23 @@ export default function ProjectDetailClient({
     <div className="flex h-screen bg-zinc-50 overflow-hidden">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{background: '#F3F4F6'}}>
+      <div className="flex-1 flex flex-col min-w-0 w-full overflow-hidden" style={{background: '#F3F4F6'}}>
         {/* ── Top header bar ─────────────────────────────────────────────── */}
-        <header className="bg-white border-b border-zinc-200 h-14 flex items-center px-4 gap-3 shrink-0">
+        <header
+          className="bg-white border-b border-gray-200 h-14 flex items-center gap-3 shrink-0"
+          style={{paddingLeft: '24px', paddingRight: '24px'}}
+        >
           <Link
             href="/dashboard"
-            className="text-blue-600 text-xs font-semibold whitespace-nowrap hover:underline shrink-0"
+            className="text-blue-600 hover:text-blue-700 text-xs font-semibold whitespace-nowrap shrink-0"
           >
             ← All Projects
           </Link>
-          <h1 className="text-sm font-bold text-zinc-900 truncate flex-1">
-            {project.code}&nbsp;&nbsp;·&nbsp;&nbsp;{project.clientName}&nbsp;&nbsp;·&nbsp;&nbsp;{project.facilityAddress}
+          <h1 className="text-sm truncate flex-1">
+            <span className="text-gray-400">&nbsp;·&nbsp;</span>
+            <span className="font-semibold text-gray-900">{project.code}</span>
+            <span className="text-gray-400">&nbsp;·&nbsp;</span>
+            <span className="text-gray-500">{project.clientName}</span>
           </h1>
           <span
             className={`shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${pillStyle(project.status)}`}
@@ -116,96 +136,139 @@ export default function ProjectDetailClient({
           )}
         </header>
 
-        {/* ── Status rail card ───────────────────────────────────────────── */}
-        <div style={{background: 'white', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: '24px 32px', marginBottom: '16px', width: '100%', overflowX: 'auto'}}>
-          <StatusRail currentStatus={toPipelineStatus(project.status)} />
-        </div>
+        {/* ── Scrollable content area ────────────────────────────────────── */}
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            paddingLeft: '24px',
+            paddingRight: '24px',
+            paddingTop: '24px',
+            paddingBottom: '24px',
+          }}
+        >
+          {/* ── Status rail card ─────────────────────────────────────────── */}
+          <div
+            style={{
+              background: 'white',
+              border: '1px solid #E5E7EB',
+              borderRadius: '12px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+              padding: '24px 48px',
+              marginBottom: '16px',
+              width: '100%',
+              overflowX: 'auto',
+              boxSizing: 'border-box',
+            }}
+          >
+            <StatusRail currentStatus={toPipelineStatus(project.status)} />
+          </div>
 
-        {/* ── Key stats ──────────────────────────────────────────────────── */}
-        <div className="bg-white border-b border-zinc-200 px-4 pt-1 pb-4 shrink-0">
-          <div className="flex flex-wrap gap-3">
-            <StatCard label="Total Weight"   value={`${totalWeight.toLocaleString()} lb`} />
-            <StatCard label="Miles from Hub" value={`${project.milesFromHub} mi`} />
-            <StatCard label="Storage"        value={`${project.storageDays} days`} />
-            <StatCard
-              label="Rush Delivery"
-              value={project.rushDelivery ? 'Yes' : 'No'}
-              danger={project.rushDelivery}
-            />
-            <StatCard label="Start" value={startDateStr} />
+          {/* ── Stat cards row ───────────────────────────────────────────── */}
+          <div
+            style={{
+              background: 'white',
+              border: '1px solid #E5E7EB',
+              borderRadius: '12px',
+              padding: '16px 24px',
+              marginBottom: '16px',
+              display: 'flex',
+              gap: '24px',
+              flexWrap: 'wrap',
+            }}
+          >
+            {statCards.map((sc, i) => (
+              <StatCard
+                key={sc.label}
+                label={sc.label}
+                value={sc.value}
+                danger={sc.danger}
+                isLast={i === statCards.length - 1}
+              />
+            ))}
+          </div>
+
+          {/* ── Invoice section (only when the project is billable) ──────── */}
+          {isAdmin && (project.status === 'complete' || project.status === 'invoiced') && (
+            <InvoiceSection project={project} onEmailSent={handleEmailSent} />
+          )}
+
+          {/* ── Tabs + content card ──────────────────────────────────────── */}
+          <div
+            style={{
+              background: 'white',
+              border: '1px solid #E5E7EB',
+              borderRadius: '12px',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Tab bar */}
+            <div className="border-b border-gray-200 px-4 flex">
+              {visibleTabs.map((tab) => {
+                const Icon = TAB_ICONS[tab];
+                const locked = ADMIN_ONLY_TABS.has(tab);
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={[
+                      'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                      activeTab === tab
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-zinc-500 hover:text-zinc-900',
+                    ].join(' ')}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {locked && <Lock size={14} />}
+                      {Icon && <Icon size={14} />}
+                      {tab}
+                    </span>
+                  </button>
+                );
+              })}
+              {!isAdmin && (
+                <span className="ml-auto flex items-center text-xs text-amber-600 font-medium pr-1">
+                  Admin-only tab hidden
+                </span>
+              )}
+            </div>
+
+            {/* Tab content */}
+            <div style={{padding: '24px'}}>
+              {activeTab === 'Shipments' && (
+                <ShipmentsTab
+                  shipments={shipments}
+                  projectId={project.id}
+                  projectStatus={project.status}
+                />
+              )}
+              {activeTab === 'Install Tasks' && (
+                <InstallTasksTab
+                  installTasks={installTasks}
+                  projectId={project.id}
+                  projectStatus={project.status}
+                />
+              )}
+              {activeTab === 'Pricing Quote' && isAdmin && (
+                <PricingQuoteTab
+                  project={project}
+                  shipments={shipments}
+                  installTasks={installTasks}
+                  rateCards={rateCards}
+                  suggestedRateCardId={suggestedRateCardId}
+                  defaultRateCardId={defaultRateCardId}
+                  onEmailSent={handleEmailSent}
+                />
+              )}
+              {activeTab === 'Notes' && (
+                <NotesTab notes={project.notes} stageNotes={project.stageNotes} />
+              )}
+              {activeTab === 'History' && isAdmin && (
+                <ActivityLogTab entries={activityLog} />
+              )}
+            </div>
           </div>
         </div>
-
-        {/* ── Invoice section (only when the project is billable) ────────── */}
-        {isAdmin && (project.status === 'complete' || project.status === 'invoiced') && (
-          <InvoiceSection project={project} onEmailSent={handleEmailSent} />
-        )}
-
-        {/* ── Tab bar ────────────────────────────────────────────────────── */}
-        <div className="bg-white border-b border-zinc-200 px-4 flex shrink-0">
-          {visibleTabs.map((tab) => {
-            const Icon = TAB_ICONS[tab];
-            const locked = ADMIN_ONLY_TABS.has(tab);
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={[
-                  'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
-                  activeTab === tab
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-zinc-500 hover:text-zinc-900',
-                ].join(' ')}
-              >
-                <span className="flex items-center gap-1.5">
-                  {locked && <Lock size={14} />}
-                  {Icon && <Icon size={14} />}
-                  {tab}
-                </span>
-              </button>
-            );
-          })}
-          {!isAdmin && (
-            <span className="ml-auto flex items-center text-xs text-amber-600 font-medium pr-1">
-              Admin-only tab hidden
-            </span>
-          )}
-        </div>
-
-        {/* ── Tab content ────────────────────────────────────────────────── */}
-        <main className="flex-1 overflow-y-auto p-4">
-          {activeTab === 'Shipments' && (
-            <ShipmentsTab
-              shipments={shipments}
-              projectId={project.id}
-              projectStatus={project.status}
-            />
-          )}
-          {activeTab === 'Install Tasks' && (
-            <InstallTasksTab
-              installTasks={installTasks}
-              projectId={project.id}
-              projectStatus={project.status}
-            />
-          )}
-          {activeTab === 'Pricing Quote' && isAdmin && (
-            <PricingQuoteTab
-              project={project}
-              shipments={shipments}
-              installTasks={installTasks}
-              rateCards={rateCards}
-              suggestedRateCardId={suggestedRateCardId}
-              defaultRateCardId={defaultRateCardId}
-              onEmailSent={handleEmailSent}
-            />
-          )}
-          {activeTab === 'Notes' && (
-            <NotesTab notes={project.notes} stageNotes={project.stageNotes} />
-          )}
-          {activeTab === 'History' && isAdmin && (
-            <ActivityLogTab entries={activityLog} />
-          )}
-        </main>
       </div>
 
       {showEdit && (
