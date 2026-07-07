@@ -8,14 +8,16 @@ import ProjectsTable from './ProjectsTable';
 
 const INACTIVE_STATUSES = ['Quote', 'Installed', 'Delivered', 'quoted', 'complete', 'invoiced'];
 const DONE_STATUSES     = ['Installed', 'Delivered', 'complete', 'invoiced'];
+const PIPELINE_ORDER    = ['prospect','quoted','denied','awarded','receiving','staging','scheduled','delivered','installing','complete','invoiced'];
 
 export default function DashboardClient({ projects, viewAs = 'admin', analyticsSection = null }) {
   const [search,       setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [clientFilter, setClientFilter] = useState('All');
+  const [timeFilter,   setTimeFilter]   = useState('all');
 
   const uniqueStatuses = useMemo(
-    () => [...new Set(projects.map((p) => p.status))].sort(),
+    () => PIPELINE_ORDER.filter((s) => projects.some((p) => p.status === s)),
     [projects],
   );
 
@@ -26,6 +28,13 @@ export default function DashboardClient({ projects, viewAs = 'admin', analyticsS
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
+    const now = new Date();
+    const timeRanges = {
+      week:  new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay()),
+      month: new Date(now.getFullYear(), now.getMonth(), 1),
+      '30d': new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+    };
+    const cutoff = timeRanges[timeFilter];
     return projects.filter((p) => {
       const matchSearch = !q ||
         p.code.toLowerCase().includes(q) ||
@@ -33,9 +42,10 @@ export default function DashboardClient({ projects, viewAs = 'admin', analyticsS
         p.facility.toLowerCase().includes(q);
       const matchStatus = statusFilter === 'All' || p.status === statusFilter;
       const matchClient = clientFilter === 'All' || p.client === clientFilter;
-      return matchSearch && matchStatus && matchClient;
+      const matchTime   = !cutoff || (p.createdAt && new Date(p.createdAt) >= cutoff);
+      return matchSearch && matchStatus && matchClient && matchTime;
     });
-  }, [projects, search, statusFilter, clientFilter]);
+  }, [projects, search, statusFilter, clientFilter, timeFilter]);
 
   const stats = {
     active:   projects.filter((p) => !INACTIVE_STATUSES.includes(p.status)).length,
@@ -70,6 +80,7 @@ export default function DashboardClient({ projects, viewAs = 'admin', analyticsS
             search={search}             onSearch={setSearch}
             statusFilter={statusFilter} onStatusChange={setStatusFilter} statuses={uniqueStatuses}
             clientFilter={clientFilter} onClientChange={setClientFilter} clients={uniqueClients}
+            timeFilter={timeFilter}     onTimeChange={setTimeFilter}
           />
           <ProjectsTable projects={filtered} />
         </main>

@@ -4,7 +4,7 @@ const CARDS = [
   { key: 'active',   label: 'Active Projects', Icon: LayoutDashboard, iconBg: '#EFF6FF', iconColor: '#2563EB' },
   { key: 'delayed',  label: 'Delayed',          Icon: AlertTriangle,   iconBg: '#FEF2F2', iconColor: '#EF4444', danger: true },
   { key: 'quotes',   label: 'Pending Quotes',   Icon: FileText,        iconBg: '#FFFBEB', iconColor: '#D97706' },
-  { key: 'doneWeek', label: 'Done This Week',   Icon: CheckCircle,     iconBg: '#F0FDF4', iconColor: '#16A34A' },
+  { key: 'doneWeek', label: 'Completed This Week', Icon: CheckCircle,     iconBg: '#F0FDF4', iconColor: '#16A34A' },
 ];
 
 export default function StatCards({ stats }) {
