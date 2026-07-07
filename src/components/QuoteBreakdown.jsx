@@ -77,8 +77,9 @@ export default function QuoteBreakdown({ breakdown, theme = 'light' }) {
 
   const {
     receiving, storage, freight, fuel, rush,
-    installTasks = [], installCost, subtotal, overhead, margin, total,
+    installTasks, installCost, subtotal, overhead, margin, total,
   } = breakdown;
+  const tasks = Array.isArray(installTasks) ? installTasks : [];
 
   return (
     <div>
@@ -86,7 +87,7 @@ export default function QuoteBreakdown({ breakdown, theme = 'light' }) {
         <Row
           t={t}
           label="Receiving"
-          detail={`${LBS.format(receiving.weight)} lbs × ${fmtRate(receiving.rate)}/lb`}
+          detail={`${LBS.format(receiving.weight || 0)} lbs × ${fmtRate(receiving.rate || 0)}/lb`}
           amount={receiving.total}
         />
       )}
@@ -94,7 +95,7 @@ export default function QuoteBreakdown({ breakdown, theme = 'light' }) {
         <Row
           t={t}
           label="Storage"
-          detail={`${LBS.format(storage.weight)} lbs × ${storage.days} days × ${fmtRate(storage.rate)}/lb/day`}
+          detail={`${LBS.format(storage.weight || 0)} lbs × ${storage.days || 0} days × ${fmtRate(storage.rate || 0)}/lb/day`}
           amount={storage.total}
         />
       )}
@@ -102,7 +103,7 @@ export default function QuoteBreakdown({ breakdown, theme = 'light' }) {
         <Row
           t={t}
           label="Freight"
-          detail={`${LBS.format(freight.weight)} lbs × ${fmtRate(freight.rate)}/lb (min ${USD.format(freight.min)})`}
+          detail={`${LBS.format(freight.weight || 0)} lbs × ${fmtRate(freight.rate || 0)}/lb (min ${USD.format(freight.min || 0)})`}
           amount={freight.total}
         />
       )}
@@ -113,14 +114,14 @@ export default function QuoteBreakdown({ breakdown, theme = 'light' }) {
         <Row t={t} label="Rush Surcharge" detail={fmtPct(rush.pct)} amount={rush.total} rush />
       )}
 
-      {installTasks.length > 0 && (
+      {tasks.length > 0 && (
         <div className={`pt-3 pb-1`}>
           <p className={`text-[11px] font-semibold uppercase tracking-wide ${t.section}`}>
             Install Tasks
           </p>
         </div>
       )}
-      {installTasks.map((task, i) => (
+      {tasks.map((task, i) => (
         <Row
           t={t}
           key={`${task.type}-${i}`}
@@ -129,7 +130,7 @@ export default function QuoteBreakdown({ breakdown, theme = 'light' }) {
           amount={task.total}
         />
       ))}
-      {installTasks.length > 0 && installCost != null && (
+      {tasks.length > 0 && installCost != null && (
         <Row t={t} label="Install Subtotal" amount={installCost} strong />
       )}
 

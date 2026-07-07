@@ -17,8 +17,8 @@ export const dynamic = 'force-dynamic';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import QuoteBreakdown from '@/components/QuoteBreakdown';
+import PortalHeader from '@/app/portal/_components/PortalHeader';
 import { getPortalProjectById } from '@/app/portal/[id]/_data/getPortalProject';
 import { parseClientName } from '@/app/dashboard/_lib/viewAsOptions';
 import ImpersonationView from '@/app/dashboard/_components/ImpersonationView';
@@ -65,31 +65,33 @@ export default async function PortalQuotePage({ params }) {
   // (no impersonation) gets the read-only preview.
   const canRespond = !!effectiveClientName;
 
-  const content = (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="bg-white border-b border-zinc-200 px-4 sm:px-6 py-4 sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0 shadow-sm">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-[0.12em] leading-none">
-                SeniorFreightOS
-              </p>
-              <h1 className="text-base font-semibold text-zinc-900 leading-tight mt-0.5">Quote Review</h1>
-            </div>
-          </div>
-          <Link href={returnTo} className="text-sm font-medium text-zinc-500 hover:text-blue-600 transition-colors">
-            ← My Projects
-          </Link>
-        </div>
-      </header>
+  const cardStyle = {
+    background: 'white',
+    border: '1px solid #E5E7EB',
+    borderRadius: '12px',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+    padding: '24px',
+    marginBottom: '16px',
+  };
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-        <div>
+  const content = (
+    <div style={{ background: '#F3F4F6', minHeight: '100vh' }}>
+      <PortalHeader backHref={returnTo} />
+
+      <main style={{ maxWidth: '960px', margin: '0 auto', padding: '24px' }}>
+        <section style={cardStyle}>
+          <p
+            style={{
+              fontSize: '11px',
+              fontWeight: 700,
+              color: '#6B7280',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: '8px',
+            }}
+          >
+            Quote Review
+          </p>
           <p className="text-xs font-mono font-medium text-zinc-400 tracking-[0.18em] uppercase mb-2">
             {project.code}
           </p>
@@ -99,9 +101,9 @@ export default async function PortalQuotePage({ params }) {
           {project.clientName && (
             <p className="text-sm text-zinc-500 mt-1">{project.clientName}</p>
           )}
-        </div>
+        </section>
 
-        <section className="bg-white rounded-xl border border-zinc-200 p-6 sm:p-8 shadow-sm">
+        <section style={cardStyle}>
           <h3 className="text-lg font-bold text-zinc-900 mb-1">Your Quote</h3>
           <p className="text-sm text-zinc-500 mb-5">
             Review the itemized breakdown below before responding.
